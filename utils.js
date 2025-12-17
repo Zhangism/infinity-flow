@@ -77,6 +77,57 @@ window.calculateDaysLeft = function(dateStr, currentDateStr) {
     return { diff, label, urgent };
 };
 
+// --- Confetti Effect ---
+window.triggerConfetti = function(x, y) {
+    const colors = ['#ff5252', '#ffb142', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f'];
+    const particleCount = 30;
+
+    // Use passed coordinates or center of screen if not provided
+    const originX = x !== undefined ? x : window.innerWidth / 2;
+    const originY = y !== undefined ? y : window.innerHeight / 2;
+
+    for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-particle';
+        document.body.appendChild(p);
+
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        p.style.backgroundColor = color;
+        p.style.left = originX + 'px';
+        p.style.top = originY + 'px';
+
+        // Random velocity
+        const velocityX = (Math.random() - 0.5) * 15; // Spread X
+        const velocityY = (Math.random() - 1.2) * 15; // Shoot Upwards
+        const rotation = Math.random() * 360;
+
+        const animation = p.animate([
+            { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+            { transform: `translate(${velocityX * 20}px, ${velocityY * 20 + 100}px) rotate(${rotation}deg)`, opacity: 0 }
+        ], {
+            duration: 800 + Math.random() * 400,
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+            fill: 'forwards'
+        });
+
+        animation.onfinish = () => p.remove();
+    }
+};
+
+window.animateAndDelete = function(elementId, deleteCallback) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.classList.add('deleting');
+        // Wait for CSS transition (0.3s)
+        setTimeout(() => {
+            deleteCallback();
+        }, 300);
+    } else {
+        deleteCallback();
+    }
+};
+
+
 // --- AI Helpers ---
 
 window.getAiConfig = function() {
@@ -107,7 +158,7 @@ window.repairJsonString = function(jsonLike) {
     // Replace Python-ish literals
     s = s.replace(/\bNone\b/g, 'null').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false');
     // Quote unquoted keys: { target: ... } or , quadrant: ...
-    s = s.replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_\-]*)(\s*):/g, '$1"$2"$3:');
+    s = s.replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_\-]*)(s*):/g, '$1"$2"$3:');
     // Convert single-quoted strings to double-quoted (best-effort)
     s = s.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, (m, g1) => {
         const escaped = String(g1).replace(/"/g, '\\"');

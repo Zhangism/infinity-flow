@@ -459,13 +459,15 @@ window.updateWeeklyDate = function(id, date) {
 };
 
 window.deleteWeeklyTask = function(id) {
-    const idx = window.appData.weekData.weeklyTasks.findIndex(t => t.id === id);
-    if (idx > -1) {
-        window.appData.weekData.weeklyTasks.splice(idx, 1);
-        saveData();
-        window.renderWeekly();
-        if (window.UIModule?.showToast) window.UIModule.showToast('已删除周任务', { type: 'info' });
-    }
+    window.animateAndDelete(`weekly-task-${id}`, () => {
+        const idx = window.appData.weekData.weeklyTasks.findIndex(t => t.id === id);
+        if (idx > -1) {
+            window.appData.weekData.weeklyTasks.splice(idx, 1);
+            saveData();
+            window.renderWeekly();
+            if (window.UIModule?.showToast) window.UIModule.showToast('已删除周任务', { type: 'info' });
+        }
+    });
 };
 
 // Daily Tasks
@@ -489,14 +491,16 @@ window.addDailyTaskUI = function(quadrant) {
 };
 
 window.deleteDailyTask = function(id) {
-    const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
-    const idx = tasks.findIndex(t => t.id === id);
-    if (idx > -1) {
-        const [task] = tasks.splice(idx, 1);
-        window.pushUndo('DELETE_TASK', { task: task, date: window.appData.currentDateStr }, "任务已删除，撤销？");
-        saveData();
-        window.renderDaily();
-    }
+    window.animateAndDelete(`task-${id}`, () => {
+        const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
+        const idx = tasks.findIndex(t => t.id === id);
+        if (idx > -1) {
+            const [task] = tasks.splice(idx, 1);
+            window.pushUndo('DELETE_TASK', { task: task, date: window.appData.currentDateStr }, "任务已删除，撤销？");
+            saveData();
+            window.renderDaily();
+        }
+    });
 };
 
 window.updateDailyText = function(id, txt) {
@@ -517,8 +521,16 @@ window.updateDailyProgressUI = function(id, el) {
     const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
     const task = tasks.find(t => t.id === id);
     if(task) {
+        const oldProgress = task.progress;
         task.progress = parseInt(val);
-        if (task.progress >= 100) {
+        if (task.progress >= 100 && oldProgress < 100) {
+            // Trigger Confetti
+            const rect = el.getBoundingClientRect();
+            window.triggerConfetti(rect.left + rect.width/2, rect.top);
+            
+            // Render update
+            window.renderDaily();
+        } else if (task.progress < 100 && oldProgress >= 100) {
             window.renderDaily();
         }
     }
@@ -603,10 +615,12 @@ window.addRecurringTaskUI = function() {
 };
 
 window.deleteRecurringTask = function(id) {
-    window.appData.recurringData.recurring = window.appData.recurringData.recurring.filter(t => t.id !== id);
-    saveData();
-    window.renderRecurring();
-    if (window.UIModule?.showToast) window.UIModule.showToast('已删除日常模板', { type: 'info' });
+    window.animateAndDelete(`recurring-${id}`, () => {
+        window.appData.recurringData.recurring = window.appData.recurringData.recurring.filter(t => t.id !== id);
+        saveData();
+        window.renderRecurring();
+        if (window.UIModule?.showToast) window.UIModule.showToast('已删除日常模板', { type: 'info' });
+    });
 };
 
 window.updateRecurringTitle = function(id, txt) {
@@ -624,6 +638,12 @@ window.addLongTermGoalUI = function() {
 };
 
 window.deleteLongTermGoal = function(i) {
+    // Note: Long Term Goals are rendered by index, not stable ID. 
+    // We'd need to modify renderLongTerm to give them IDs if we want smooth delete.
+    // For now, let's keep it simple or use a querySelector by index?
+    // Let's assume the renderLongTerm assigns IDs? It doesn't yet.
+    // We will skip animation for Long Term Goals for this step or update renderLongTerm next.
+    // For consistency, let's just do the deletion.
     window.appData.longTermData.goals.splice(i, 1);
     saveData();
     window.renderLongTerm();
@@ -661,14 +681,16 @@ window.updateSubGoal = function(gIdx, sIdx, el) {
 };
 
 window.deleteRecommendation = function(id) {
-    const recs = window.appData.weekData.dailyData[window.appData.currentDateStr].recommendations;
-    const idx = recs.findIndex(t => t.id === id);
-    if (idx > -1) {
-        recs.splice(idx, 1);
-        saveData();
-        window.renderRecommendations();
-        if (window.UIModule?.showToast) window.UIModule.showToast('已删除推荐任务', { type: 'info' });
-    }
+    window.animateAndDelete(`rec-${id}`, () => {
+        const recs = window.appData.weekData.dailyData[window.appData.currentDateStr].recommendations;
+        const idx = recs.findIndex(t => t.id === id);
+        if (idx > -1) {
+            recs.splice(idx, 1);
+            saveData();
+            window.renderRecommendations();
+            if (window.UIModule?.showToast) window.UIModule.showToast('已删除推荐任务', { type: 'info' });
+        }
+    });
 };
 
 // Summary

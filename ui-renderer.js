@@ -297,6 +297,7 @@ window.UIModule.renderRecommendations = function(recommendations) {
 
     recommendations.forEach(task => {
         const div = document.createElement('div');
+        div.id = `rec-${task.id}`; // Add ID
         div.className = 'task-list-item recommendation';
         div.draggable = true;
         div.ondragstart = (e) => window.dragStartRecommendation(e, task);
@@ -326,6 +327,7 @@ window.UIModule.renderRecurring = function(recurringTasks) {
 
     recurringTasks.forEach(tpl => {
         const div = document.createElement('div');
+        div.id = `recurring-${tpl.id}`; // Add ID
         div.className = 'task-list-item recurring';
         div.draggable = true;
         div.ondragstart = (e) => window.dragStartRecurring(e, tpl);
