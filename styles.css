@@ -3084,10 +3084,6 @@ body.theme-dark .timeline-grid::after {
     z-index: 10;
 }
 
-display: flex;
-flex-direction: column;
-}
-
 .block-title {
     font-weight: 600;
     font-size: 13px;

@@ -5,7 +5,7 @@ class CalendarModule {
         this.modal = null;
         this.grid = null;
         this.title = null;
-        this.monthCache = {}; 
+        this.monthCache = {};
     }
 
     init() {
@@ -13,7 +13,7 @@ class CalendarModule {
         this.modal = document.getElementById('calendar-modal-overlay');
         this.grid = document.getElementById('calendar-grid');
         this.title = document.getElementById('calendar-title');
-        
+
         if (!this.modal) {
             console.error('Calendar modal overlay not found!');
             return;
@@ -27,23 +27,38 @@ class CalendarModule {
         });
     }
 
-    open() {
+    async open() {
         console.log('CalendarModule.open() called');
         if (!this.modal) {
             console.error('Calendar modal not initialized');
             return;
         }
-        
+
         // Reset to current viewing date or default to today if not set
         if (!this.currentViewDate) this.currentViewDate = new Date();
-        
+
+        // Ensure display: flex is set before transition class
         this.modal.style.display = 'flex';
-        this.render(this.currentViewDate.getFullYear(), this.currentViewDate.getMonth());
+
+        // First render to ensure content exists
+        await this.render(this.currentViewDate.getFullYear(), this.currentViewDate.getMonth());
+
+        // Use a small timeout to ensure the browser has processed the display change
+        // before starting the transition
+        setTimeout(() => {
+            if (this.modal) this.modal.classList.add('show');
+        }, 10);
     }
 
     close() {
         if (this.modal) {
-            this.modal.style.display = 'none';
+            this.modal.classList.remove('show');
+            // Wait for transition to finish before hiding (matching 0.3s-0.4s in CSS)
+            setTimeout(() => {
+                if (this.modal && !this.modal.classList.contains('show')) {
+                    this.modal.style.display = 'none';
+                }
+            }, 300);
         }
     }
 
@@ -70,12 +85,12 @@ class CalendarModule {
         // Calculate Days
         const firstDayOfMonth = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         // Adjust for Monday start (0=Sun, 1=Mon...6=Sat) -> (0=Mon...6=Sun)
         // Standard JS Day: 0(Sun) 1(Mon) 2(Tue) 3(Wed) 4(Thu) 5(Fri) 6(Sat)
         // We want: 0(Mon) 1(Tue) 2(Wed) 3(Thu) 4(Fri) 5(Sat) 6(Sun)
-        let startDay = firstDayOfMonth.getDay(); 
-        startDay = startDay === 0 ? 6 : startDay - 1; 
+        let startDay = firstDayOfMonth.getDay();
+        startDay = startDay === 0 ? 6 : startDay - 1;
 
         // Previous Month Padding
         const prevMonthDays = new Date(year, month, 0).getDate();
@@ -89,23 +104,23 @@ class CalendarModule {
 
         // Current Month Days
         const monthData = await this.fetchMonthData(year, month);
-        
+
         for (let i = 1; i <= daysInMonth; i++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             const cell = document.createElement('div');
             cell.className = 'calendar-day';
             cell.textContent = i;
-            
+
             // Add Heatmap Class
             if (monthData[dateStr]) {
                 const { completionRate, hasOverdue } = monthData[dateStr];
                 const level = this.getHeatmapLevel(completionRate);
                 cell.classList.add(`level-${level}`);
-                
+
                 if (hasOverdue) {
                     cell.classList.add('has-overdue');
                 }
-                
+
                 // Tooltip logic could go here
                 cell.title = `完成率：${completionRate}%`;
             } else {
@@ -128,7 +143,7 @@ class CalendarModule {
         // Or just fill until the end of the last row
         // const remainingCells = 7 - (totalCells % 7);
         // if (remainingCells < 7) { ... }
-        
+
         // Let's stick to filling the grid to look nice, usually 35 or 42 cells.
         // We will just fill the rest of the last row
         const rows = Math.ceil(totalCells / 7);
@@ -160,7 +175,7 @@ class CalendarModule {
         // Return object: { "YYYY-MM-DD": { completionRate: 0-100, hasOverdue: bool } }
         const result = {};
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         // 1. Identify involved weeks
         // We can't easily guess file names without computing week IDs for every day
         // Optimization: Compute unique week IDs for the month
@@ -190,7 +205,7 @@ class CalendarModule {
                                     const total = dayData.tasks.length;
                                     const completed = dayData.tasks.filter(t => t.progress >= 100).length;
                                     const rate = Math.round((completed / total) * 100);
-                                    
+
                                     let hasOverdue = false;
                                     const todayStr = new Date().toISOString().split('T')[0];
                                     if (dateStr < todayStr && completed < total) {
@@ -199,7 +214,7 @@ class CalendarModule {
 
                                     result[dateStr] = { completionRate: rate, hasOverdue };
                                 } else {
-                                     result[dateStr] = { completionRate: 0, hasOverdue: false };
+                                    result[dateStr] = { completionRate: 0, hasOverdue: false };
                                 }
                             }
                         }
@@ -209,7 +224,7 @@ class CalendarModule {
                 console.warn(`Failed to read week file: ${fileName}`, e);
             }
         }
-        
+
         // Save to Cache
         this.monthCache[cacheKey] = result;
         return result;

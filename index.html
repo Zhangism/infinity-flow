@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>心流白板 - 个人效能管理</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
+
 <body>
 
     <div id="intro-screen" class="modal-overlay" style="display: none;">
@@ -21,7 +26,8 @@
                 数据存储在您的本地文件系统中。<br>
                 请选择一个文件夹作为工作区。
             </p>
-            <button id="workspace-open-btn" class="btn-small" style="font-size: 14px; padding: 10px 20px;" onclick="openWorkspace()">📂 打开本地工作区</button>
+            <button id="workspace-open-btn" class="btn-small" style="font-size: 14px; padding: 10px 20px;"
+                onclick="openWorkspace()">📂 打开本地工作区</button>
         </div>
     </div>
 
@@ -33,11 +39,12 @@
 
     <aside id="sidebar">
         <h2>周任务 <span onclick="refreshApp()" style="cursor:pointer; font-size:12px;" title="强制刷新">🔄</span></h2>
-        
+
         <div id="weekly-list"></div>
-        
+
         <div class="inline-input-group">
-            <input type="text" id="new-weekly-input" class="inline-input" placeholder="添加周任务..." onkeydown="if(event.key==='Enter') addWeeklyTaskUI()">
+            <input type="text" id="new-weekly-input" class="inline-input" placeholder="添加周任务..."
+                onkeydown="if(event.key==='Enter') addWeeklyTaskUI()">
             <button class="btn-small" onclick="addWeeklyTaskUI()">添加</button>
         </div>
 
@@ -47,14 +54,16 @@
         <div class="section-title">日常任务</div>
         <div id="recurring-list" class="small-hint">拖动到四象限创建当日任务，模板本身不可完成。</div>
         <div class="inline-input-group">
-            <input type="text" id="new-recurring-input" class="inline-input" placeholder="添加日常任务模板..." onkeydown="if(event.key==='Enter') addRecurringTaskUI()">
+            <input type="text" id="new-recurring-input" class="inline-input" placeholder="添加日常任务模板..."
+                onkeydown="if(event.key==='Enter') addRecurringTaskUI()">
             <button class="btn-small" onclick="addRecurringTaskUI()">添加</button>
         </div>
 
         <div class="section-title">长期目标</div>
         <div id="long-term-list"></div>
         <div class="inline-input-group">
-            <input type="text" id="new-goal-input" class="inline-input" placeholder="新目标..." onkeydown="if(event.key==='Enter') addLongTermGoalUI()">
+            <input type="text" id="new-goal-input" class="inline-input" placeholder="新目标..."
+                onkeydown="if(event.key==='Enter') addLongTermGoalUI()">
             <button class="btn-small" onclick="addLongTermGoalUI()">添加</button>
         </div>
 
@@ -69,8 +78,11 @@
             <div class="header-left">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="btn-icon" onclick="changeDate(-1)">◀</button>
-                    <h1 id="header-date" style="cursor:pointer; margin:0;" onclick="calendarModule.open()" title="点击切换日期">加载中...</h1>
-                    <input type="date" id="date-picker" style="width:0; height:0; border:0; padding:0; opacity:0; position:absolute;" onchange="goToDate(this.value)">
+                    <h1 id="header-date" style="cursor:pointer; margin:0;"
+                        onclick="calendarModule.open(); event.stopPropagation();" title="点击切换日期">加载中...</h1>
+                    <input type="date" id="date-picker"
+                        style="width:0; height:0; border:0; padding:0; opacity:0; position:absolute;"
+                        onchange="goToDate(this.value)">
                     <button class="btn-icon" onclick="changeDate(1)">▶</button>
                     <button class="btn-small" onclick="goToToday()" id="btn-today" style="display:none;">返回当前日期</button>
                 </div>
@@ -78,29 +90,35 @@
                 <div id="save-indicator"></div>
             </div>
             <div class="top-actions">
-                <button class="btn-icon" onclick="openSmartAddModal()" title="AI 快速添加" style="font-size: 16px;">✨</button>
+                <button class="btn-icon" onclick="openSmartAddModal()" title="AI 快速添加"
+                    style="font-size: 16px;">✨</button>
                 <div class="search-bar" style="flex-direction: column; align-items: stretch; gap: 4px;">
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <input type="text" id="search-input" placeholder="搜索..." onkeydown="if(event.key==='Enter') searchAllFiles(document.getElementById('search-input').value)">
+                        <input type="text" id="search-input" placeholder="搜索..."
+                            onkeydown="if(event.key==='Enter') searchAllFiles(document.getElementById('search-input').value)">
                         <button onclick="searchAllFiles(document.getElementById('search-input').value)">搜索</button>
                     </div>
                     <div id="search-error" class="form-inline-error" aria-live="polite" style="display:none;"></div>
                 </div>
                 <div class="theme-switcher" id="theme-switcher" title="切换主题">
-                    <button type="button" class="theme-toggle" id="theme-toggle" aria-haspopup="listbox" aria-expanded="false">
+                    <button type="button" class="theme-toggle" id="theme-toggle" aria-haspopup="listbox"
+                        aria-expanded="false">
                         <span class="theme-label" id="theme-label">极简</span>
                         <span class="chevron">▾</span>
                     </button>
                     <div class="theme-menu" id="theme-menu" role="listbox">
-                        <button type="button" class="theme-option" data-theme="minimal" role="option" aria-label="Minimal theme">
+                        <button type="button" class="theme-option" data-theme="minimal" role="option"
+                            aria-label="Minimal theme">
                             <span class="theme-option-text">极简</span>
                             <span class="theme-option-meta">干净、克制</span>
                         </button>
-                        <button type="button" class="theme-option" data-theme="dark" role="option" aria-label="Dark theme">
+                        <button type="button" class="theme-option" data-theme="dark" role="option"
+                            aria-label="Dark theme">
                             <span class="theme-option-text">暗色</span>
                             <span class="theme-option-meta">低光专注</span>
                         </button>
-                        <button type="button" class="theme-option" data-theme="paper" role="option" aria-label="Paper theme">
+                        <button type="button" class="theme-option" data-theme="paper" role="option"
+                            aria-label="Paper theme">
                             <span class="theme-option-text">纸感</span>
                             <span class="theme-option-meta">温暖纸张</span>
                         </button>
@@ -129,7 +147,8 @@
                 </div>
                 <div class="setting">
                     <label for="ai-custom-prompt">自定义系统提示（可选）：</label>
-                    <textarea id="ai-custom-prompt" class="modal-input" rows="4" placeholder="可留空，使用默认的复盘教练风格..."></textarea>
+                    <textarea id="ai-custom-prompt" class="modal-input" rows="4"
+                        placeholder="可留空，使用默认的复盘教练风格..."></textarea>
                 </div>
                 <div class="setting">
                     <label for="ai-model">模型名称：</label>
@@ -159,9 +178,13 @@
                     <button class="btn-close-modal" onclick="closeSmartAddModal()">✕</button>
                 </div>
                 <p class="small-hint">输入自然语言，例如："下周五前完成报告 (Q2)" 或 "明天上午10点开会"</p>
-                <input type="text" id="smart-add-input" class="modal-input" placeholder="在这里输入..." onkeydown="if(event.key==='Enter') executeSmartAdd()">
-                <div id="smart-add-error" class="form-inline-error" aria-live="polite" style="display:none; margin-top:-6px;"></div>
-                <div id="smart-add-preview" style="margin-bottom:15px; font-size:13px; color:var(--text-light); white-space: pre-wrap; min-height: 20px;"></div>
+                <input type="text" id="smart-add-input" class="modal-input" placeholder="在这里输入..."
+                    onkeydown="if(event.key==='Enter') executeSmartAdd()">
+                <div id="smart-add-error" class="form-inline-error" aria-live="polite"
+                    style="display:none; margin-top:-6px;"></div>
+                <div id="smart-add-preview"
+                    style="margin-bottom:15px; font-size:13px; color:var(--text-light); white-space: pre-wrap; min-height: 20px;">
+                </div>
                 <button class="btn-small" id="btn-smart-add-confirm" onclick="executeSmartAdd()">解析并添加</button>
             </div>
         </div>
@@ -187,9 +210,11 @@
                 </div>
                 <div class="setting">
                     <label for="snippet-content">内容：</label>
-                    <textarea id="snippet-content" class="modal-input modal-input-mono" rows="6" placeholder="代码或文本内容..."></textarea>
+                    <textarea id="snippet-content" class="modal-input modal-input-mono" rows="6"
+                        placeholder="代码或文本内容..."></textarea>
                 </div>
-                <button class="btn-small" onclick="saveSnippetFromModal()" style="margin-top:10px; width:100%; padding:10px;">保存</button>
+                <button class="btn-small" onclick="saveSnippetFromModal()"
+                    style="margin-top:10px; width:100%; padding:10px;">保存</button>
             </div>
         </div>
 
@@ -226,11 +251,12 @@
                 </div>
                 <div class="q-tasks" id="list-q1"></div>
                 <div class="inline-input-group">
-                    <input type="text" id="input-q1" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(1)">
+                    <input type="text" id="input-q1" class="inline-input" placeholder="输入任务..."
+                        onkeydown="if(event.key==='Enter') addDailyTaskUI(1)">
                     <button class="btn-small" onclick="addDailyTaskUI(1)">添加</button>
                 </div>
             </div>
-            
+
             <div class="quadrant q-2" id="q2" ondragover="allowDrop(event)" ondrop="drop(event, 2)">
                 <div class="q-header">
                     <span class="q-title">✨ 重要 & 不紧急</span>
@@ -238,7 +264,8 @@
                 </div>
                 <div class="q-tasks" id="list-q2"></div>
                 <div class="inline-input-group">
-                    <input type="text" id="input-q2" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(2)">
+                    <input type="text" id="input-q2" class="inline-input" placeholder="输入任务..."
+                        onkeydown="if(event.key==='Enter') addDailyTaskUI(2)">
                     <button class="btn-small" onclick="addDailyTaskUI(2)">添加</button>
                 </div>
             </div>
@@ -250,7 +277,8 @@
                 </div>
                 <div class="q-tasks" id="list-q3"></div>
                 <div class="inline-input-group">
-                    <input type="text" id="input-q3" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(3)">
+                    <input type="text" id="input-q3" class="inline-input" placeholder="输入任务..."
+                        onkeydown="if(event.key==='Enter') addDailyTaskUI(3)">
                     <button class="btn-small" onclick="addDailyTaskUI(3)">添加</button>
                 </div>
             </div>
@@ -262,7 +290,8 @@
                 </div>
                 <div class="q-tasks" id="list-q4"></div>
                 <div class="inline-input-group">
-                    <input type="text" id="input-q4" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(4)">
+                    <input type="text" id="input-q4" class="inline-input" placeholder="输入任务..."
+                        onkeydown="if(event.key==='Enter') addDailyTaskUI(4)">
                     <button class="btn-small" onclick="addDailyTaskUI(4)">添加</button>
                 </div>
             </div>
@@ -276,8 +305,11 @@
             </div>
             <div class="summary-dock-content">
                 <div id="daily-summary-container" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-                    <div id="daily-summary-view" class="markdown-view" style="display:none; padding:15px; overflow-y:auto; flex:1;" onclick="toggleSummaryEdit(true)"></div>
-                    <textarea id="daily-summary" placeholder="今天完成了什么？有什么需要改进？(自动保存, 支持 Markdown)" oninput="handleSummaryInput()" onblur="toggleSummaryEdit(false)"></textarea>
+                    <div id="daily-summary-view" class="markdown-view"
+                        style="display:none; padding:15px; overflow-y:auto; flex:1;" onclick="toggleSummaryEdit(true)">
+                    </div>
+                    <textarea id="daily-summary" placeholder="今天完成了什么？有什么需要改进？(自动保存, 支持 Markdown)"
+                        oninput="handleSummaryInput()" onblur="toggleSummaryEdit(false)"></textarea>
                 </div>
                 <div class="summary-actions">
                     <button class="btn-small" onclick="generateAutoSummary()">✨ 自动复盘</button>
@@ -362,7 +394,13 @@
                 <button class="btn-close-modal" onclick="calendarModule.close()">✕</button>
             </div>
             <div class="calendar-weekdays">
-                <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
+                <div>一</div>
+                <div>二</div>
+                <div>三</div>
+                <div>四</div>
+                <div>五</div>
+                <div>六</div>
+                <div>日</div>
             </div>
             <div class="calendar-grid" id="calendar-grid"></div>
         </div>
@@ -374,15 +412,16 @@
         <button id="app-toast-action" type="button"></button>
     </div>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-        <script src="utils.js"></script>
-        <script src="storage.js"></script>
-        <script src="ui-renderer.js"></script>
-        <script src="calendar.js"></script>
-        <script src="schedule.js"></script>
-        <script src="script.js"></script>
-        <script src="timer.js"></script>
-        <script src="inbox.js"></script>
-        <script src="snippets.js"></script>
-    </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="utils.js"></script>
+    <script src="storage.js"></script>
+    <script src="ui-renderer.js"></script>
+    <script src="calendar.js"></script>
+    <script src="schedule.js"></script>
+    <script src="script.js"></script>
+    <script src="timer.js"></script>
+    <script src="inbox.js"></script>
+    <script src="snippets.js"></script>
+</body>
+
 </html>
