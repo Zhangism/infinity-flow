@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心流白板 - 个人效能管理</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <div id="intro-screen" class="modal-overlay" style="display: none;">
+        <div class="modal" style="text-align: center;">
+            <div style="font-size: 40px;">♾️</div>
+            <h2>心流白板</h2>
+            <p id="intro-message" style="color: #666; font-size: 14px; line-height: 1.5;">
+                数据存储在您的本地文件系统中。<br>
+                请选择一个文件夹作为工作区。
+            </p>
+            <button id="workspace-open-btn" class="btn-small" style="font-size: 14px; padding: 10px 20px;" onclick="openWorkspace()">📂 打开本地工作区</button>
+        </div>
+    </div>
+
+    <div id="dialog-overlay" class="modal-overlay">
+        <div class="modal" id="dialog-content"></div>
+    </div>
+
+    <button class="exit-focus-float" onclick="exitFocusMode()">🔙 退出专注模式</button>
+
+    <aside id="sidebar">
+        <h2>周任务 <span onclick="refreshApp()" style="cursor:pointer; font-size:12px;" title="强制刷新">🔄</span></h2>
+        
+        <div id="weekly-list"></div>
+        
+        <div class="inline-input-group">
+            <input type="text" id="new-weekly-input" class="inline-input" placeholder="添加周任务..." onkeydown="if(event.key==='Enter') addWeeklyTaskUI()">
+            <button class="btn-small" onclick="addWeeklyTaskUI()">添加</button>
+        </div>
+
+        <div class="section-title">推荐任务</div>
+        <div id="recommendation-list" class="small-hint">前一天未完成的任务会出现于此，拖动到四象限或删除即可。</div>
+
+        <div class="section-title">日常任务</div>
+        <div id="recurring-list" class="small-hint">拖动到四象限创建当日任务，模板本身不可完成。</div>
+        <div class="inline-input-group">
+            <input type="text" id="new-recurring-input" class="inline-input" placeholder="添加日常任务模板..." onkeydown="if(event.key==='Enter') addRecurringTaskUI()">
+            <button class="btn-small" onclick="addRecurringTaskUI()">添加</button>
+        </div>
+
+        <div class="section-title">长期目标</div>
+        <div id="long-term-list"></div>
+        <div class="inline-input-group">
+            <input type="text" id="new-goal-input" class="inline-input" placeholder="新目标..." onkeydown="if(event.key==='Enter') addLongTermGoalUI()">
+            <button class="btn-small" onclick="addLongTermGoalUI()">添加</button>
+        </div>
+
+        <div id="inbox-module"></div>
+        <div id="snippets-module"></div>
+    </aside>
+
+    <div id="resizer"></div>
+
+    <main>
+        <header>
+            <div class="header-left">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="btn-icon" onclick="changeDate(-1)">◀</button>
+                    <h1 id="header-date" style="cursor:pointer; margin:0;" onclick="calendarModule.open()" title="点击切换日期">加载中...</h1>
+                    <input type="date" id="date-picker" style="width:0; height:0; border:0; padding:0; opacity:0; position:absolute;" onchange="goToDate(this.value)">
+                    <button class="btn-icon" onclick="changeDate(1)">▶</button>
+                    <button class="btn-small" onclick="goToToday()" id="btn-today" style="display:none;">返回当前日期</button>
+                </div>
+                <p id="header-week">--</p>
+                <div id="save-indicator"></div>
+            </div>
+            <div class="top-actions">
+                <button class="btn-icon" onclick="openSmartAddModal()" title="AI 快速添加" style="font-size: 16px;">✨</button>
+                <div class="search-bar" style="flex-direction: column; align-items: stretch; gap: 4px;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <input type="text" id="search-input" placeholder="搜索..." onkeydown="if(event.key==='Enter') searchAllFiles(document.getElementById('search-input').value)">
+                        <button onclick="searchAllFiles(document.getElementById('search-input').value)">搜索</button>
+                    </div>
+                    <div id="search-error" class="form-inline-error" aria-live="polite" style="display:none;"></div>
+                </div>
+                <div class="theme-switcher" id="theme-switcher" title="切换主题">
+                    <button type="button" class="theme-toggle" id="theme-toggle" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="theme-label" id="theme-label">极简</span>
+                        <span class="chevron">▾</span>
+                    </button>
+                    <div class="theme-menu" id="theme-menu" role="listbox">
+                        <button type="button" class="theme-option" data-theme="minimal" role="option" aria-label="Minimal theme">
+                            <span class="theme-option-text">极简</span>
+                            <span class="theme-option-meta">干净、克制</span>
+                        </button>
+                        <button type="button" class="theme-option" data-theme="dark" role="option" aria-label="Dark theme">
+                            <span class="theme-option-text">暗色</span>
+                            <span class="theme-option-meta">低光专注</span>
+                        </button>
+                        <button type="button" class="theme-option" data-theme="paper" role="option" aria-label="Paper theme">
+                            <span class="theme-option-text">纸感</span>
+                            <span class="theme-option-meta">温暖纸张</span>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="selectWorkspace()">📂 切换工作区</button>
+                <button onclick="toggleExportDialog()">📤 导出数据</button>
+                <button onclick="openAnalytics()">📊 数据统计</button>
+                <button onclick="openSettings()">⚙️ 设置</button>
+            </div>
+        </header>
+
+        <div id="settings-overlay" class="modal-overlay">
+            <div class="modal" id="settings-modal">
+                <div class="modal-header">
+                    <h3>设置</h3>
+                    <button class="btn-close-modal" onclick="closeSettings()">✕</button>
+                </div>
+                <div class="setting">
+                    <label for="ai-base-url">AI 基础地址：</label>
+                    <input type="text" id="ai-base-url" class="modal-input" placeholder="http://10.204.65.181:3000/api">
+                </div>
+                <div class="setting">
+                    <label for="ai-key">API Key / JWT：</label>
+                    <input type="password" id="ai-key" class="modal-input" placeholder="eyJhbGciOi...">
+                </div>
+                <div class="setting">
+                    <label for="ai-custom-prompt">自定义系统提示（可选）：</label>
+                    <textarea id="ai-custom-prompt" class="modal-input" rows="4" placeholder="可留空，使用默认的复盘教练风格..."></textarea>
+                </div>
+                <div class="setting">
+                    <label for="ai-model">模型名称：</label>
+                    <input type="text" id="ai-model" class="modal-input" placeholder="deepseek-r1:latest">
+                </div>
+                <button class="btn-small" onclick="saveSettings()">保存</button>
+            </div>
+        </div>
+
+        <div id="snippet-ai-modal-overlay" class="modal-overlay">
+            <div class="modal" id="snippet-ai-modal">
+                <div class="modal-header">
+                    <h3>AI 优化片段</h3>
+                    <button class="btn-close-modal" onclick="closeSnippetAIModal()">✕</button>
+                </div>
+                <p class="modal-hint">希望 AI 如何修改这个片段？</p>
+                <input type="text" id="snippet-ai-input" class="modal-input" placeholder="例如：增加错误处理...">
+                <button class="btn-small" onclick="executeSnippetRefinement()">生成</button>
+            </div>
+        </div>
+
+        <!-- Smart Capture Modal -->
+        <div id="smart-add-modal-overlay" class="modal-overlay">
+            <div class="modal" id="smart-add-modal">
+                <div class="modal-header">
+                    <h3>✨ AI 快速添加</h3>
+                    <button class="btn-close-modal" onclick="closeSmartAddModal()">✕</button>
+                </div>
+                <p class="small-hint">输入自然语言，例如："下周五前完成报告 (Q2)" 或 "明天上午10点开会"</p>
+                <input type="text" id="smart-add-input" class="modal-input" placeholder="在这里输入..." onkeydown="if(event.key==='Enter') executeSmartAdd()">
+                <div id="smart-add-error" class="form-inline-error" aria-live="polite" style="display:none; margin-top:-6px;"></div>
+                <div id="smart-add-preview" style="margin-bottom:15px; font-size:13px; color:var(--text-light); white-space: pre-wrap; min-height: 20px;"></div>
+                <button class="btn-small" id="btn-smart-add-confirm" onclick="executeSmartAdd()">解析并添加</button>
+            </div>
+        </div>
+
+        <div id="snippet-modal-overlay" class="modal-overlay">
+            <div class="modal" id="snippet-modal">
+                <div class="modal-header">
+                    <h3 id="snippet-modal-title">新建片段</h3>
+                    <button class="btn-close-modal" onclick="closeSnippetModal()">✕</button>
+                </div>
+                <div class="setting">
+                    <label for="snippet-type">类型：</label>
+                    <select id="snippet-type" class="modal-input">
+                        <option value="linux">Linux</option>
+                        <option value="ai">AI 提示词</option>
+                        <option value="shortcut">快捷键</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label for="snippet-desc">描述：</label>
+                    <input type="text" id="snippet-desc" class="modal-input" placeholder="简短描述...">
+                </div>
+                <div class="setting">
+                    <label for="snippet-content">内容：</label>
+                    <textarea id="snippet-content" class="modal-input modal-input-mono" rows="6" placeholder="代码或文本内容..."></textarea>
+                </div>
+                <button class="btn-small" onclick="saveSnippetFromModal()" style="margin-top:10px; width:100%; padding:10px;">保存</button>
+            </div>
+        </div>
+
+        <div id="analytics-overlay" class="modal-overlay">
+            <div class="modal" id="analytics-modal">
+                <div class="modal-header">
+                    <h3>数据统计</h3>
+                    <button class="btn-close-modal" onclick="closeAnalytics()">✕</button>
+                </div>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchAnalyticsTab('daily')">按日</button>
+                    <button class="tab-btn" onclick="switchAnalyticsTab('weekly')">按周</button>
+                    <button class="tab-btn" onclick="switchAnalyticsTab('monthly')">按月</button>
+                </div>
+                <div id="analytics-content"></div>
+            </div>
+        </div>
+
+        <div id="search-results-overlay" class="modal-overlay">
+            <div class="modal" id="search-results-modal">
+                <div class="modal-header">
+                    <h3>搜索结果</h3>
+                    <button class="btn-close-modal" onclick="closeSearchResults()">✕</button>
+                </div>
+                <div id="search-results-content"></div>
+            </div>
+        </div>
+
+        <div class="quadrant-container" id="q-container">
+            <div class="quadrant q-1" id="q1" ondragover="allowDrop(event)" ondrop="drop(event, 1)">
+                <div class="q-header">
+                    <span class="q-title">🔥 重要 & 紧急</span>
+                    <button class="btn-icon" onclick="enterFocusMode('q1')">⛶</button>
+                </div>
+                <div class="q-tasks" id="list-q1"></div>
+                <div class="inline-input-group">
+                    <input type="text" id="input-q1" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(1)">
+                    <button class="btn-small" onclick="addDailyTaskUI(1)">添加</button>
+                </div>
+            </div>
+            
+            <div class="quadrant q-2" id="q2" ondragover="allowDrop(event)" ondrop="drop(event, 2)">
+                <div class="q-header">
+                    <span class="q-title">✨ 重要 & 不紧急</span>
+                    <button class="btn-icon" onclick="enterFocusMode('q2')">⛶</button>
+                </div>
+                <div class="q-tasks" id="list-q2"></div>
+                <div class="inline-input-group">
+                    <input type="text" id="input-q2" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(2)">
+                    <button class="btn-small" onclick="addDailyTaskUI(2)">添加</button>
+                </div>
+            </div>
+
+            <div class="quadrant q-3" id="q3" ondragover="allowDrop(event)" ondrop="drop(event, 3)">
+                <div class="q-header">
+                    <span class="q-title">⚡ 紧急 & 不重要</span>
+                    <button class="btn-icon" onclick="enterFocusMode('q3')">⛶</button>
+                </div>
+                <div class="q-tasks" id="list-q3"></div>
+                <div class="inline-input-group">
+                    <input type="text" id="input-q3" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(3)">
+                    <button class="btn-small" onclick="addDailyTaskUI(3)">添加</button>
+                </div>
+            </div>
+
+            <div class="quadrant q-4" id="q4" ondragover="allowDrop(event)" ondrop="drop(event, 4)">
+                <div class="q-header">
+                    <span class="q-title">☕ 不紧急 & 不重要</span>
+                    <button class="btn-icon" onclick="enterFocusMode('q4')">⛶</button>
+                </div>
+                <div class="q-tasks" id="list-q4"></div>
+                <div class="inline-input-group">
+                    <input type="text" id="input-q4" class="inline-input" placeholder="输入任务..." onkeydown="if(event.key==='Enter') addDailyTaskUI(4)">
+                    <button class="btn-small" onclick="addDailyTaskUI(4)">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Summary Dock -->
+        <div id="bottom-summary-dock" class="summary-dock collapsed">
+            <div class="summary-dock-header" onclick="toggleSummaryDock()">
+                <span>📅 今日复盘</span>
+                <button class="btn-icon btn-dock-toggle" id="dock-toggle-btn">▲</button>
+            </div>
+            <div class="summary-dock-content">
+                <div id="daily-summary-container" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+                    <div id="daily-summary-view" class="markdown-view" style="display:none; padding:15px; overflow-y:auto; flex:1;" onclick="toggleSummaryEdit(true)"></div>
+                    <textarea id="daily-summary" placeholder="今天完成了什么？有什么需要改进？(自动保存, 支持 Markdown)" oninput="handleSummaryInput()" onblur="toggleSummaryEdit(false)"></textarea>
+                </div>
+                <div class="summary-actions">
+                    <button class="btn-small" onclick="generateAutoSummary()">✨ 自动复盘</button>
+                    <button class="btn-small" onclick="finalizeDayAndWeek()">完成今天/这周的工作</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="resizer-right"></div>
+
+    <!-- Schedule Sidebar -->
+    <aside id="schedule-sidebar">
+        <div class="schedule-header">
+            <span>⏰ 时间轴</span>
+        </div>
+        <div id="preset-zone">
+            <!-- Rendered by schedule.js -->
+        </div>
+        <div id="timeline-container">
+            <!-- Rendered by schedule.js -->
+        </div>
+    </aside>
+
+    <div id="timer-modal-overlay" class="modal-overlay">
+        <div class="modal" id="timer-modal">
+            <div class="modal-header">
+                <h3 id="timer-task-title">任务计时</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn-icon" onclick="toggleTimerStyle()" title="切换计时器样式">🎨</button>
+                    <button class="btn-close-modal" onclick="closeTimerModal()">✕</button>
+                </div>
+            </div>
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTimerTab('pomodoro')">番茄钟</button>
+                <button class="tab-btn" onclick="switchTimerTab('stopwatch')">秒表</button>
+            </div>
+
+            <div id="pomodoro-tab" class="tab-content active">
+                <div class="timer-display" id="pomodoro-display">25:00</div>
+                <div class="timer-controls">
+                    <button class="btn-small" id="pomodoro-toggle-btn" onclick="togglePomodoro()">开始</button>
+                    <button class="btn-small" id="pomodoro-reset-btn" onclick="resetPomodoro()">重置</button>
+                </div>
+            </div>
+
+            <div id="stopwatch-tab" class="tab-content">
+                <div class="timer-display" id="stopwatch-display">00:00</div>
+                <div class="timer-controls">
+                    <button class="btn-small" id="stopwatch-toggle-btn" onclick="toggleStopwatch()">开始</button>
+                    <button class="btn-small" id="stopwatch-reset-btn" onclick="resetStopwatch()">重置</button>
+                </div>
+            </div>
+
+            <div class="manual-time-adjust">
+                <h4>手动调整时间</h4>
+                <p>已记录总时长（分钟）：</p>
+                <input type="number" id="manual-time-input" min="0" placeholder="分钟">
+                <div class="modal-hint">单位：分钟（≥ 0）。用于纠错：更新会覆盖该任务的累计计时。</div>
+                <button class="btn-small" onclick="updateManualTime()">更新</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal-overlay" class="modal-overlay">
+        <div class="modal" style="width: 320px; text-align: center;">
+            <h3 id="confirm-title" style="margin-bottom:10px;">确认</h3>
+            <p id="confirm-message" style="color:var(--text-light); margin-bottom:20px;"></p>
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button class="btn-cancel" onclick="closeConfirmModal()">取消</button>
+                <button class="btn-confirm" id="confirm-yes-btn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="calendar-modal-overlay" class="modal-overlay">
+        <div class="modal" id="calendar-modal">
+            <div class="calendar-header">
+                <button class="btn-icon" onclick="calendarModule.prevMonth()">◀</button>
+                <h3 id="calendar-title">年月</h3>
+                <button class="btn-icon" onclick="calendarModule.nextMonth()">▶</button>
+                <button class="btn-close-modal" onclick="calendarModule.close()">✕</button>
+            </div>
+            <div class="calendar-weekdays">
+                <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+    </div>
+
+    <!-- App Toast (generic feedback) -->
+    <div id="app-toast" class="undo-toast app-toast" aria-live="polite" aria-atomic="true">
+        <span id="app-toast-msg"></span>
+        <button id="app-toast-action" type="button"></button>
+    </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="utils.js"></script>
+        <script src="storage.js"></script>
+        <script src="ui-renderer.js"></script>
+        <script src="calendar.js"></script>
+        <script src="schedule.js"></script>
+        <script src="script.js"></script>
+        <script src="timer.js"></script>
+        <script src="inbox.js"></script>
+        <script src="snippets.js"></script>
+    </body>
+</html>
