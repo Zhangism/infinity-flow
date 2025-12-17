@@ -9,7 +9,7 @@ function openTimerModal(taskId) {
 
     document.getElementById('timer-task-title').innerText = task.content;
     document.getElementById('manual-time-input').value = Math.round(task.timer.totalWork / 60000);
-    
+
     document.getElementById('timer-modal-overlay').style.display = 'flex';
 
     // Ensure display/buttons reflect current running state
@@ -94,7 +94,7 @@ function toggleTimerStyle() {
     const modal = document.getElementById('timer-modal');
     let currentStyle = modal.classList.contains('style-minimal') ? 'minimal' : 'dashboard';
     let newStyle = currentStyle === 'dashboard' ? 'minimal' : 'dashboard';
-    
+
     modal.classList.remove(`style-${currentStyle}`);
     modal.classList.add(`style-${newStyle}`);
     localStorage.setItem('timerStyle', newStyle);
@@ -206,7 +206,7 @@ function toggleStopwatch(id) {
         if (task.timer.pomodoro && task.timer.pomodoro.isRunning) {
             pausePomodoro(); // Pause pomodoro if running on this task
         }
-        
+
         tasks.forEach(t => {
             if (t.timer.isRunning) {
                 t.timer.totalWork += (now - t.timer.lastStart);
@@ -242,7 +242,7 @@ function updateTimerUI() {
         // formatTime is global from script.js
         const timeStr = formatTime(totalTime);
         const isTimerActive = task.timer.isRunning || (task.timer.pomodoro && task.timer.pomodoro.isRunning);
-        
+
         const card = document.getElementById(`task-${task.id}`);
         if (card) {
             const badge = card.querySelector('.timer-badge');
@@ -279,11 +279,14 @@ function updateTimerUI() {
 
                     if (remaining <= 0) {
                         pomodoro.isRunning = false;
+                        // Calculate actual elapsed time for this session
+                        const actualElapsed = Date.now() - pomodoro.lastStart;
+                        task.timer.totalPomodoro = (task.timer.totalPomodoro || 0) + actualElapsed;
                         pomodoro.remaining = pomodoro.duration;
-                        task.timer.totalPomodoro = (task.timer.totalPomodoro || 0) + pomodoro.duration;
+                        pomodoro.lastStart = null;
                         saveData();
                         const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-1.mp3');
-                        audio.play().catch(() => {});
+                        audio.play().catch(() => { });
                         if (typeof window.showAlert === 'function') {
                             window.showAlert('番茄钟结束！', '提醒');
                         }

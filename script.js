@@ -103,6 +103,40 @@ window.onload = async () => {
     setupResizer();
     loadSettings();
 
+    // Configure marked for XSS protection
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            // Sanitize HTML by escaping dangerous tags
+            sanitize: false, // deprecated in newer versions, we'll use custom renderer
+        });
+
+        // Create a custom renderer that escapes HTML in code blocks
+        const renderer = new marked.Renderer();
+        const originalCodeRenderer = renderer.code;
+        renderer.code = function (code, language, isEscaped) {
+            // Escape HTML entities in code
+            const escapedCode = String(code)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            return `<pre><code class="language-${language || ''}">${escapedCode}</code></pre>`;
+        };
+
+        // Override html renderer to prevent raw HTML injection
+        renderer.html = function (html) {
+            // Escape raw HTML blocks for security
+            return String(html)
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        };
+
+        marked.use({ renderer });
+    }
+
     // Global dragend cleanup
     document.addEventListener('dragend', () => {
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));

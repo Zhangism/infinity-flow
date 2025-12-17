@@ -1,18 +1,18 @@
 // utils.js - Standard Script Version
 
-window.uuid = function() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+window.uuid = function () {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
 };
 
-window.debounce = function(func, wait) {
+window.debounce = function (func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
 };
 
-window.formatTime = function(ms) {
+window.formatTime = function (ms) {
     if (ms === 0) return '00:00';
     const totalSeconds = Math.floor(ms / 1000);
     const h = Math.floor(totalSeconds / 3600);
@@ -24,7 +24,7 @@ window.formatTime = function(ms) {
     return `${pad(m)}:${pad(s)}`;
 };
 
-window.formatTimeForAnalytics = function(ms) {
+window.formatTimeForAnalytics = function (ms) {
     if (ms === 0) return '0h 0m';
     const totalMinutes = Math.floor(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
@@ -32,34 +32,34 @@ window.formatTimeForAnalytics = function(ms) {
     return `${hours}h ${minutes}m`;
 };
 
-window.getWeekId = function(dateStr) {
+window.getWeekId = function (dateStr) {
     const d = new Date(dateStr);
-    d.setHours(0,0,0,0);
-    d.setDate(d.getDate() + 4 - (d.getDay()||7));
-    const yearStart = new Date(d.getFullYear(),0,1);
-    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     return `${d.getFullYear()}_W${weekNo}`;
 };
 
-window.getWeekFileName = function(dateStr) {
+window.getWeekFileName = function (dateStr) {
     return `${window.getWeekId(dateStr)}.json`;
 };
 
-window.getLocalTodayStr = function() {
+window.getLocalTodayStr = function () {
     const d = new Date();
     const offset = d.getTimezoneOffset() * 60000;
     return new Date(d.getTime() - offset).toISOString().split('T')[0];
 };
 
-window.calculateDaysLeft = function(dateStr, currentDateStr) {
+window.calculateDaysLeft = function (dateStr, currentDateStr) {
     if (!dateStr) return null;
     const target = new Date(dateStr);
     const today = new Date(currentDateStr);
     const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-    
+
     let label = '';
     let urgent = false;
-    
+
     if (diff < 0) {
         label = `逾期 ${Math.abs(diff)} 天`;
         urgent = true;
@@ -73,12 +73,12 @@ window.calculateDaysLeft = function(dateStr, currentDateStr) {
         label = `剩 ${diff} 天`;
         urgent = false;
     }
-    
+
     return { diff, label, urgent };
 };
 
 // --- Confetti Effect ---
-window.triggerConfetti = function(x, y) {
+window.triggerConfetti = function (x, y) {
     const colors = ['#ff5252', '#ffb142', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f'];
     const particleCount = 30;
 
@@ -114,7 +114,7 @@ window.triggerConfetti = function(x, y) {
     }
 };
 
-window.animateAndDelete = function(elementId, deleteCallback) {
+window.animateAndDelete = function (elementId, deleteCallback) {
     const el = document.getElementById(elementId);
     if (el) {
         el.classList.add('deleting');
@@ -130,7 +130,7 @@ window.animateAndDelete = function(elementId, deleteCallback) {
 
 // --- AI Helpers ---
 
-window.getAiConfig = function() {
+window.getAiConfig = function () {
     const aiBaseUrl = (localStorage.getItem('aiBaseUrl') || '').trim();
     const aiKey = (localStorage.getItem('aiKey') || '').trim();
     const aiModel = (localStorage.getItem('aiModel') || '').trim();
@@ -141,7 +141,7 @@ window.getAiConfig = function() {
     };
 };
 
-window.stripModelThinking = function(text) {
+window.stripModelThinking = function (text) {
     return (text || '')
         .replace(/<think>[\s\S]*?<\/think>/gi, '')
         .replace(/```json/gi, '```')
@@ -149,7 +149,7 @@ window.stripModelThinking = function(text) {
         .trim();
 };
 
-window.repairJsonString = function(jsonLike) {
+window.repairJsonString = function (jsonLike) {
     let s = (jsonLike || '').trim();
     // Normalize “smart quotes”
     s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
@@ -167,7 +167,7 @@ window.repairJsonString = function(jsonLike) {
     return s;
 };
 
-window.extractAndParseJson = function(text) {
+window.extractAndParseJson = function (text) {
     const cleaned = window.stripModelThinking(text);
     try {
         return JSON.parse(cleaned);

@@ -3,12 +3,12 @@
 window.UIModule = {};
 
 // Shared UI helpers
-window.UIModule.emptyHtml = function(message) {
+window.UIModule.emptyHtml = function (message) {
     const safe = String(message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `<div class="empty-state small-hint">${safe}</div>`;
 };
 
-window.UIModule.showToast = function(message, opts = {}) {
+window.UIModule.showToast = function (message, opts = {}) {
     const toast = document.getElementById('app-toast');
     const msg = document.getElementById('app-toast-msg');
     const actionBtn = document.getElementById('app-toast-action');
@@ -49,7 +49,7 @@ window.UIModule.showToast = function(message, opts = {}) {
     }
 };
 
-window.UIModule.hideToast = function() {
+window.UIModule.hideToast = function () {
     const toast = document.getElementById('app-toast');
     if (!toast) return;
     toast.classList.remove('show', 'toast-success', 'toast-error', 'toast-info', 'has-action');
@@ -59,7 +59,7 @@ window.UIModule.hideToast = function() {
     }
 };
 
-window.UIModule.generateSubtasksHTML = function(task) {
+window.UIModule.generateSubtasksHTML = function (task) {
     return task.subtasks.map(subtask => `
         <div class="subtask-item ${subtask.completed ? 'completed' : ''}" 
              draggable="true" 
@@ -76,32 +76,32 @@ window.UIModule.generateSubtasksHTML = function(task) {
     `).join('');
 };
 
-window.UIModule.generateTaskHTML = function(task, isDone) {
+window.UIModule.generateTaskHTML = function (task, isDone) {
     if (!task.timer) task.timer = { totalWork: 0, isRunning: false, lastStart: null };
     if (typeof task.progress !== 'number') task.progress = 0;
     if (!Array.isArray(task.subtasks)) task.subtasks = [];
 
-    const totalTime = (task.timer.totalWork || 0) + (task.timer.pomodoro?.totalPomodoro || 0);
+    const totalTime = (task.timer.totalWork || 0) + (task.timer.totalPomodoro || 0);
     const timeStr = window.formatTime(totalTime);
     const isTimerActive = task.timer.isRunning || (task.timer.pomodoro && task.timer.pomodoro.isRunning);
     const timerClass = isTimerActive ? 'timer-badge active' : 'timer-badge';
-    
+
     const isRecurringInstance = !!task.templateId;
     const lockIcon = isRecurringInstance ? '<span class="task-lock-icon" title="来自日常模板 (只读)">🔒</span>' : '';
-    
+
     let contentHtml = '';
     if (isRecurringInstance) {
-         contentHtml = `<div class="task-text ${isDone?'done':''}">${lockIcon}${task.content}</div>`;
+        contentHtml = `<div class="task-text ${isDone ? 'done' : ''}">${lockIcon}${task.content}</div>`;
     } else {
-         const renderedMarkdown = (typeof marked !== 'undefined') ? marked.parse(task.content) : task.content;
-         contentHtml = `
+        const renderedMarkdown = (typeof marked !== 'undefined') ? marked.parse(task.content) : task.content;
+        contentHtml = `
             <div class="task-content-wrapper">
-                <div class="markdown-content ${isDone?'done':''}" onclick="editTaskContent('${task.id}')">${renderedMarkdown}</div>
+                <div class="markdown-content ${isDone ? 'done' : ''}" onclick="editTaskContent('${task.id}')">${renderedMarkdown}</div>
                 <div class="edit-content" contenteditable="true" onblur="saveTaskContent('${task.id}', this)" style="display:none"></div>
             </div>
          `;
     }
-    
+
     const subtasksHtml = window.UIModule.generateSubtasksHTML(task);
 
     return `
@@ -145,20 +145,20 @@ window.UIModule.generateTaskHTML = function(task, isDone) {
     `;
 };
 
-window.UIModule.renderAll = function(appData) {
+window.UIModule.renderAll = function (appData) {
     window.UIModule.renderLongTerm(appData.longTermData.goals);
     window.UIModule.renderWeekly(appData.weekData.weeklyTasks, appData.currentDateStr);
     window.UIModule.renderRecommendations(appData.weekData.dailyData[appData.currentDateStr].recommendations);
     window.UIModule.renderRecurring(appData.recurringData.recurring);
     window.UIModule.renderDaily(appData.weekData.dailyData[appData.currentDateStr], appData.currentDateStr);
-    
+
     const summaryVal = appData.weekData.dailyData[appData.currentDateStr].summary || "";
     document.getElementById('daily-summary').value = summaryVal;
-    
+
     if (window.toggleSummaryEdit) window.toggleSummaryEdit(false);
 };
 
-window.UIModule.renderLongTerm = function(goals) {
+window.UIModule.renderLongTerm = function (goals) {
     const list = document.getElementById('long-term-list');
     list.innerHTML = '';
     goals.forEach((goal, i) => {
@@ -194,9 +194,9 @@ window.UIModule.renderLongTerm = function(goals) {
     });
 };
 
-window.UIModule.renderWeekly = function(tasks, currentDateStr) {
+window.UIModule.renderWeekly = function (tasks, currentDateStr) {
     const list = document.getElementById('weekly-list');
-    
+
     // 1. Cleanup
     Array.from(list.children).forEach(el => {
         if (el.id && el.id.startsWith('weekly-task-')) {
@@ -224,7 +224,7 @@ window.UIModule.renderWeekly = function(tasks, currentDateStr) {
             div.ondragover = (e) => window.allowDrop(e);
             div.ondragleave = (e) => e.currentTarget.classList.remove('drag-over');
             div.ondrop = (e) => window.dropItem(e, task.id, 'weekly');
-            
+
             div.innerHTML = `
             <div class="row-main" style="align-items:flex-start; gap:8px;">
                 <label class="custom-checkbox">
@@ -252,17 +252,17 @@ window.UIModule.renderWeekly = function(tasks, currentDateStr) {
             div.className = `task-list-item ${task.completed ? 'completed' : ''}`;
             const checkbox = div.querySelector('input[type="checkbox"]');
             if (checkbox) checkbox.checked = task.completed;
-            
+
             // Update Title only if not editing
             const titleDiv = div.querySelector('.task-title');
             if (titleDiv && document.activeElement !== titleDiv) {
                 if (titleDiv.innerText !== task.content) titleDiv.innerText = task.content;
             }
-            
+
             // Update Meta Row
             const metaRow = div.querySelector('.task-meta-row');
             if (metaRow) {
-                 const newMetaHTML = `
+                const newMetaHTML = `
                         ${daysLeftHtml}
                         ${deadlineHtml}
                         <input type="date" value="${task.deadline || ''}" 
@@ -270,21 +270,21 @@ window.UIModule.renderWeekly = function(tasks, currentDateStr) {
                                onchange="updateWeeklyDate('${task.id}', this.value)">
                         <span class="ddl-picker" onclick="this.previousElementSibling.showPicker()">📅 设置截止</span>
                  `;
-                 // Simple innerHTML compare might fail due to whitespace, but it's okay to overwrite here as inputs (date) are not main focus area
-                 // Actually, if I am picking a date, the picker is open. Updating innerHTML might close it?
-                 // But renderWeekly is called on updateWeeklyDate -> saveData -> ... no renderWeekly call in updateWeeklyDate!
-                 // Wait, updateWeeklyDate calls renderWeekly!
-                 // window.updateWeeklyDate = function(id, date) { ... window.renderWeekly(); }
-                 // So picking a date triggers a re-render. If I wipe innerHTML, the picker might glitch or close?
-                 // But typically date picker 'onchange' happens after selection.
-                 // So it should be fine.
-                 metaRow.innerHTML = newMetaHTML;
+                // Simple innerHTML compare might fail due to whitespace, but it's okay to overwrite here as inputs (date) are not main focus area
+                // Actually, if I am picking a date, the picker is open. Updating innerHTML might close it?
+                // But renderWeekly is called on updateWeeklyDate -> saveData -> ... no renderWeekly call in updateWeeklyDate!
+                // Wait, updateWeeklyDate calls renderWeekly!
+                // window.updateWeeklyDate = function(id, date) { ... window.renderWeekly(); }
+                // So picking a date triggers a re-render. If I wipe innerHTML, the picker might glitch or close?
+                // But typically date picker 'onchange' happens after selection.
+                // So it should be fine.
+                metaRow.innerHTML = newMetaHTML;
             }
         }
     });
 };
 
-window.UIModule.renderRecommendations = function(recommendations) {
+window.UIModule.renderRecommendations = function (recommendations) {
     const list = document.getElementById('recommendation-list');
     list.innerHTML = '';
 
@@ -314,7 +314,7 @@ window.UIModule.renderRecommendations = function(recommendations) {
     });
 };
 
-window.UIModule.renderRecurring = function(recurringTasks) {
+window.UIModule.renderRecurring = function (recurringTasks) {
     const list = document.getElementById('recurring-list');
     list.innerHTML = '';
 
@@ -344,10 +344,10 @@ window.UIModule.renderRecurring = function(recurringTasks) {
     });
 };
 
-window.UIModule.renderDaily = function(dailyData, currentDateStr) {
+window.UIModule.renderDaily = function (dailyData, currentDateStr) {
     const tasks = dailyData.tasks || [];
     const quadrants = [1, 2, 3, 4];
-    
+
     // 1. Clean up removed tasks or moved tasks
     quadrants.forEach(q => {
         const list = document.getElementById(`list-q${q}`);
@@ -386,9 +386,9 @@ window.UIModule.renderDaily = function(dailyData, currentDateStr) {
             div.ondragstart = (e) => window.dragStartDaily(e, task);
             div.ondragover = (e) => window.allowDrop(e);
             div.ondragleave = (e) => e.currentTarget.classList.remove('drag-over');
-            
+
             // 1. Update Timer Badge
-            const totalTime = (task.timer.totalWork || 0) + (task.timer.pomodoro?.totalPomodoro || 0);
+            const totalTime = (task.timer.totalWork || 0) + (task.timer.totalPomodoro || 0);
             const timeStr = window.formatTime(totalTime);
             const isTimerActive = task.timer.isRunning || (task.timer.pomodoro && task.timer.pomodoro.isRunning);
             const badge = div.querySelector('.timer-badge');
@@ -407,21 +407,21 @@ window.UIModule.renderDaily = function(dailyData, currentDateStr) {
                 slider.style.backgroundSize = `${task.progress}% 100%`;
             }
             if (pctText) pctText.innerText = `${task.progress}%`;
-            
+
             // 3. Update Content/Markdown (Only if not currently editing)
             const editContent = div.querySelector('.edit-content');
             const isEditing = (document.activeElement === editContent);
-            
+
             if (!isEditing) {
                 const markdownView = div.querySelector('.markdown-content');
                 if (markdownView) {
-                     const rendered = (typeof marked !== 'undefined') ? marked.parse(task.content) : task.content;
-                     if (markdownView.innerHTML !== rendered) markdownView.innerHTML = rendered;
-                     markdownView.className = `markdown-content ${isDone?'done':''}`;
+                    const rendered = (typeof marked !== 'undefined') ? marked.parse(task.content) : task.content;
+                    if (markdownView.innerHTML !== rendered) markdownView.innerHTML = rendered;
+                    markdownView.className = `markdown-content ${isDone ? 'done' : ''}`;
                 }
                 const taskText = div.querySelector('.task-text'); // For recurring
                 if (taskText) {
-                    taskText.className = `task-text ${isDone?'done':''}`;
+                    taskText.className = `task-text ${isDone ? 'done' : ''}`;
                     // Only update text if changed to avoid cursor issues (though recurring is read-only usually)
                     // taskText contains lock icon + text.
                     const isRecurringInstance = !!task.templateId;
@@ -431,20 +431,20 @@ window.UIModule.renderDaily = function(dailyData, currentDateStr) {
                     }
                 }
             }
-            
+
             // 4. Update Subtasks (Rebuild container innerHTML)
             const subtaskContainer = div.querySelector('.subtask-container');
             if (subtaskContainer) {
-                 const newSubtasksHTML = window.UIModule.generateSubtasksHTML(task);
-                 if (subtaskContainer.innerHTML !== newSubtasksHTML) {
-                     subtaskContainer.innerHTML = newSubtasksHTML;
-                 }
+                const newSubtasksHTML = window.UIModule.generateSubtasksHTML(task);
+                if (subtaskContainer.innerHTML !== newSubtasksHTML) {
+                    subtaskContainer.innerHTML = newSubtasksHTML;
+                }
             }
 
             // 5. Update Done Button Visibility
             const doneBtn = div.querySelector('.controls-row > div:last-child');
             if (doneBtn) doneBtn.style.display = isDone ? '' : 'none';
-            
+
             const sliderContainer = div.querySelector('.slider-container');
             if (sliderContainer) {
                 if (isDone) {
@@ -455,18 +455,18 @@ window.UIModule.renderDaily = function(dailyData, currentDateStr) {
                     sliderContainer.style.margin = '0 10px';
                 }
             }
-            
+
             // Re-insert the element to ensure DOM order matches array order (fixes reordering issues)
             list.appendChild(div);
         }
     });
 };
 
-window.UIModule.updateDateHeader = function(currentDateStr, weekId) {
+window.UIModule.updateDateHeader = function (currentDateStr, weekId) {
     const d = new Date(currentDateStr);
     const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     document.getElementById('header-date').innerText = d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    
+
     let weekStr = "--";
     if (weekId) {
         const parts = weekId.split('_W');
@@ -482,7 +482,7 @@ window.UIModule.updateDateHeader = function(currentDateStr, weekId) {
     document.getElementById('btn-today').style.display = (currentDateStr !== todayStr) ? 'block' : 'none';
 };
 
-window.UIModule.updateSaveIndicator = function(status) {
+window.UIModule.updateSaveIndicator = function (status) {
     // Ensure blocking overlay exists
     let overlay = document.getElementById('save-overlay');
     if (!overlay) {
@@ -536,7 +536,7 @@ window.UIModule.updateSaveIndicator = function(status) {
     }
 };
 
-window.UIModule.renderDailyAnalytics = function(dayData) {
+window.UIModule.renderDailyAnalytics = function (dayData) {
     const analyticsContent = document.getElementById('analytics-content');
     if (!dayData || !dayData.tasks || dayData.tasks.length === 0) {
         analyticsContent.innerHTML = '<div class="small-hint">当天暂无数据。</div>';
@@ -560,7 +560,7 @@ window.UIModule.renderDailyAnalytics = function(dayData) {
     analyticsContent.innerHTML = window.UIModule.generateAnalyticsHTML('四象限时间分布（当天）', quadrantTime, totalFocusTime, completionRate);
 };
 
-window.UIModule.renderWeeklyAnalytics = function(weekData) {
+window.UIModule.renderWeeklyAnalytics = function (weekData) {
     const analyticsContent = document.getElementById('analytics-content');
     if (!weekData || !weekData.dailyData) {
         analyticsContent.innerHTML = '<div class="small-hint">本周暂无数据。</div>';
@@ -591,7 +591,7 @@ window.UIModule.renderWeeklyAnalytics = function(weekData) {
     analyticsContent.innerHTML = window.UIModule.generateAnalyticsHTML('四象限时间分布（本周）', quadrantTime, totalFocusTime, completionRate);
 };
 
-window.UIModule.renderMonthlyAnalytics = async function(dirHandle, currentDateStr) {
+window.UIModule.renderMonthlyAnalytics = async function (dirHandle, currentDateStr) {
     const analyticsContent = document.getElementById('analytics-content');
     analyticsContent.innerHTML = '<p>正在汇总本月数据...</p>';
 
@@ -613,7 +613,7 @@ window.UIModule.renderMonthlyAnalytics = async function(dirHandle, currentDateSt
 
                 const weekDate = new Date(fileYear, 0, 1 + (fileWeek - 1) * 7);
                 weekDate.setDate(weekDate.getDate() + (1 - weekDate.getDay() + 7) % 7);
-                
+
                 if (weekDate.getMonth() === currentMonth && weekDate.getFullYear() === currentYear) {
                     const fileContent = await window.StorageModule.readJson(entry.name);
                     if (fileContent && fileContent.dailyData) {
@@ -648,10 +648,10 @@ window.UIModule.renderMonthlyAnalytics = async function(dirHandle, currentDateSt
     analyticsContent.innerHTML = window.UIModule.generateAnalyticsHTML('四象限时间分布（本月）', quadrantTime, totalFocusTime, completionRate);
 };
 
-window.UIModule.renderSearchResults = function(results) {
+window.UIModule.renderSearchResults = function (results) {
     const container = document.getElementById('search-results-content');
     const overlay = document.getElementById('search-results-overlay');
-    
+
     if (!results || results.length === 0) {
         container.innerHTML = window.UIModule.emptyHtml('没有找到匹配结果。');
     } else {
@@ -669,7 +669,7 @@ window.UIModule.renderSearchResults = function(results) {
     overlay.style.display = 'flex';
 };
 
-window.UIModule.generateAnalyticsHTML = function(title, quadrantTime, totalFocusTime, completionRate) {
+window.UIModule.generateAnalyticsHTML = function (title, quadrantTime, totalFocusTime, completionRate) {
     return `
         <div class="chart-container">
             <div class="chart-title">${title}</div>

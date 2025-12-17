@@ -308,12 +308,26 @@ window.ScheduleModule = window.ScheduleModule || {};
 
     // ============ Collision Detection ============
 
-    window.ScheduleModule.checkCollision = function (start, duration, ignoreGroupId = null) {
+    window.ScheduleModule.checkCollision = function (start, duration, ignoreGroupId = null, ignoreSegmentIndex = null) {
         const schedule = this.getCurrentSchedule();
         const end = start + duration;
 
         for (const group of schedule) {
-            if (ignoreGroupId && group.id === ignoreGroupId) continue;
+            if (ignoreGroupId && group.id === ignoreGroupId) {
+                // If we're ignoring this group entirely OR specific segment
+                if (ignoreSegmentIndex === null) continue;
+
+                // Check segments but skip the ignored one
+                for (let i = 0; i < group.segments.length; i++) {
+                    if (i === ignoreSegmentIndex) continue;
+                    const segment = group.segments[i];
+                    const segEnd = segment.start + segment.duration;
+                    if (start < segEnd && end > segment.start) {
+                        return true;
+                    }
+                }
+                continue;
+            }
 
             for (const segment of group.segments) {
                 const segEnd = segment.start + segment.duration;
