@@ -16,7 +16,7 @@ window.appData = {
 
 // --- Expose Globals for Legacy Scripts ---
 // window.getWeekFileName and window.formatTime are already on window from utils.js
-window.readJson = window.StorageModule.readJson; 
+window.readJson = window.StorageModule.readJson;
 window.writeJson = window.StorageModule.writeJson;
 
 // Shared Drag & Drop Globals
@@ -32,26 +32,26 @@ Object.defineProperty(window, 'dirHandle', {
 // --- Initialization ---
 
 // --- Theme Switcher ---
-window.setupThemeSwitcher = function() {
+window.setupThemeSwitcher = function () {
     const themeSwitcher = document.getElementById('theme-switcher');
     const themeToggle = document.getElementById('theme-toggle');
     const themeMenu = document.getElementById('theme-menu');
     const themeLabel = document.getElementById('theme-label');
     const themeOptions = document.querySelectorAll('.theme-option');
-    
+
     if (!themeSwitcher || !themeToggle) return;
-    
+
     // Load saved theme
     const savedTheme = localStorage.getItem('app-theme') || 'minimal';
     applyTheme(savedTheme);
-    
+
     // Toggle menu
     themeToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         themeSwitcher.classList.toggle('open');
         themeToggle.setAttribute('aria-expanded', themeSwitcher.classList.contains('open'));
     });
-    
+
     // Theme option click
     themeOptions.forEach(option => {
         option.addEventListener('click', (e) => {
@@ -63,7 +63,7 @@ window.setupThemeSwitcher = function() {
             themeToggle.setAttribute('aria-expanded', 'false');
         });
     });
-    
+
     // Close on outside click
     document.addEventListener('click', (e) => {
         if (!themeSwitcher.contains(e.target)) {
@@ -71,11 +71,11 @@ window.setupThemeSwitcher = function() {
             themeToggle.setAttribute('aria-expanded', 'false');
         }
     });
-    
+
     function applyTheme(theme) {
         // Remove all theme classes
         document.body.classList.remove('theme-dark', 'theme-paper');
-        
+
         // Apply new theme
         if (theme === 'dark') {
             document.body.classList.add('theme-dark');
@@ -83,11 +83,11 @@ window.setupThemeSwitcher = function() {
             document.body.classList.add('theme-paper');
         }
         // 'minimal' is the default, no class needed
-        
+
         // Update label
         const labels = { minimal: '极简', dark: '暗色', paper: '纸感' };
         if (themeLabel) themeLabel.textContent = labels[theme] || '极简';
-        
+
         // Update active state
         themeOptions.forEach(opt => {
             opt.classList.toggle('active', opt.dataset.theme === theme);
@@ -99,17 +99,17 @@ window.onload = async () => {
     // External Scripts Init
     if (window.setupThemeSwitcher) window.setupThemeSwitcher();
     if (window.setupTimerStyle) window.setupTimerStyle();
-    
+
     setupResizer();
     loadSettings();
-    
+
     // Global dragend cleanup
     document.addEventListener('dragend', () => {
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
         document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
     });
-    
+
     // 预创建拖拽预览元素
     ensureDragPreviewElement();
 
@@ -121,7 +121,7 @@ window.onload = async () => {
     } else {
         console.error('CalendarModule class not found on window!');
     }
-    
+
     // Auto Load
     const auto = await window.StorageModule.tryAutoLoadWorkspace();
     if (auto && auto.status === 'ready') {
@@ -155,7 +155,7 @@ function ensureDailySummaryAutosize() {
     resize();
 }
 
-window.showWorkspaceIntro = function(autoResult) {
+window.showWorkspaceIntro = function (autoResult) {
     const intro = document.getElementById('intro-screen');
     if (!intro) return;
 
@@ -176,6 +176,7 @@ window.showWorkspaceIntro = function(autoResult) {
     }
 
     intro.style.display = 'flex';
+    setTimeout(() => intro.classList.add('show'), 10);
 };
 
 async function loadAllData() {
@@ -194,7 +195,7 @@ async function loadAllData() {
             wData = { weekId: window.appData.weekId, weeklyTasks: [], dailyData: {} };
         }
         if (!wData.weekId) wData.weekId = window.appData.weekId;
-        
+
         // Ensure Day Data with schedule array
         if (!wData.dailyData[window.appData.currentDateStr]) {
             wData.dailyData[window.appData.currentDateStr] = { tasks: [], recommendations: [], summary: "", schedule: [] };
@@ -203,7 +204,7 @@ async function loadAllData() {
         if (!wData.dailyData[window.appData.currentDateStr].schedule) {
             wData.dailyData[window.appData.currentDateStr].schedule = [];
         }
-        
+
         window.appData.weekData = wData;
 
         // Inbox & Snippets
@@ -224,12 +225,12 @@ async function loadAllData() {
         window.UIModule.updateDateHeader(window.appData.currentDateStr, window.appData.weekId);
 
         window.UIModule.renderAll(window.appData);
-        
+
         // Render schedule blocks after data load
         if (typeof window.ScheduleModule?.renderScheduleBlocks === 'function') {
             window.ScheduleModule.renderScheduleBlocks();
         }
-        
+
         ensureDailySummaryAutosize();
 
     } catch (e) {
@@ -247,7 +248,7 @@ async function saveData() {
             { name: 'recurring_tasks.json', data: window.appData.recurringData }
         ];
         await window.StorageModule.saveDataToDisk(files);
-        
+
         // Invalidate Calendar Cache for the current view
         if (window.calendarModule) {
             window.calendarModule.invalidateCache(window.appData.currentDateStr);
@@ -274,7 +275,7 @@ async function saveData() {
     }
 }
 const debouncedSave = window.debounce(saveData, 1000);
-window.saveData = saveData; 
+window.saveData = saveData;
 window.debouncedSave = debouncedSave;
 
 // --- Expose Renderers ---
@@ -285,10 +286,10 @@ window.renderRecurring = () => window.UIModule.renderRecurring(window.appData.re
 window.renderLongTerm = () => window.UIModule.renderLongTerm(window.appData.longTermData.goals);
 
 // --- Undo System ---
-window.pushUndo = function(type, payload, message) {
+window.pushUndo = function (type, payload, message) {
     // Clear existing timeout
     if (window.appData.undoTimeout) clearTimeout(window.appData.undoTimeout);
-    
+
     window.appData.undoState = { type, payload };
     if (window.UIModule?.showToast) {
         window.UIModule.showToast(message, {
@@ -311,7 +312,7 @@ window.pushUndo = function(type, payload, message) {
     }, 5000);
 };
 
-window.performUndo = function() {
+window.performUndo = function () {
     const state = window.appData.undoState;
     if (!state) return;
 
@@ -343,12 +344,12 @@ window.performUndo = function() {
 };
 
 // --- Modal Helpers ---
-window.showConfirm = function(message, onConfirm, title="确认") {
+window.showConfirm = function (message, onConfirm, title = "确认") {
     document.getElementById('confirm-title').innerText = title;
     document.getElementById('confirm-message').innerText = message;
     const yesBtn = document.getElementById('confirm-yes-btn');
     const cancelBtn = document.querySelector('#confirm-modal-overlay .btn-cancel');
-    
+
     // Reset buttons
     yesBtn.style.display = 'inline-block';
     cancelBtn.style.display = 'inline-block';
@@ -358,10 +359,12 @@ window.showConfirm = function(message, onConfirm, title="确认") {
         onConfirm();
         window.closeConfirmModal();
     };
-    document.getElementById('confirm-modal-overlay').style.display = 'flex';
+    const overlay = document.getElementById('confirm-modal-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('show'), 10);
 };
 
-window.showAlert = function(message, title="Alert") {
+window.showAlert = function (message, title = "Alert") {
     document.getElementById('confirm-title').innerText = title;
     document.getElementById('confirm-message').innerText = message;
     const yesBtn = document.getElementById('confirm-yes-btn');
@@ -375,63 +378,78 @@ window.showAlert = function(message, title="Alert") {
     yesBtn.onclick = () => {
         window.closeConfirmModal();
     };
-    document.getElementById('confirm-modal-overlay').style.display = 'flex';
+    const overlay = document.getElementById('confirm-modal-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('show'), 10);
 };
 
-window.closeConfirmModal = function() {
-    document.getElementById('confirm-modal-overlay').style.display = 'none';
+window.closeConfirmModal = function () {
+    const overlay = document.getElementById('confirm-modal-overlay');
+    overlay.classList.remove('show');
+    setTimeout(() => overlay.style.display = 'none', 300);
 };
 
 // --- Controller Logic ---
 
-window.selectWorkspace = async function() {
+window.selectWorkspace = async function () {
     const handle = await window.StorageModule.selectWorkspace();
     if (handle) {
-        document.getElementById('intro-screen').style.display = 'none';
-        await loadAllData();
+        const intro = document.getElementById('intro-screen');
+        intro.classList.remove('show');
+        setTimeout(() => {
+            intro.style.display = 'none';
+            loadAllData();
+        }, 300);
     }
 };
 
 // Prefer this entry point from the intro screen:
 // - If a workspace was remembered but needs permission, request it via user gesture.
 // - Otherwise, let the user pick a folder.
-window.openWorkspace = async function() {
+window.openWorkspace = async function () {
     const handle = await window.StorageModule.requestSavedWorkspacePermission();
     if (handle) {
-        document.getElementById('intro-screen').style.display = 'none';
-        await loadAllData();
-        return;
+        const intro = document.getElementById('intro-screen');
+        intro.classList.remove('show');
+        setTimeout(() => {
+            intro.style.display = 'none';
+            loadAllData();
+        }, 300);
+    } else {
+        // Fallback to manual selection if auto-permission fails
+        window.selectWorkspace();
     }
-    await window.selectWorkspace();
 };
 
 window.refreshApp = () => location.reload();
 
-window.changeDate = function(offset) {
+window.changeDate = function (offset) {
     const d = new Date(window.appData.currentDateStr);
     d.setDate(d.getDate() + offset);
     window.appData.currentDateStr = d.toISOString().split('T')[0];
     loadAllData();
 };
 
-window.goToDate = function(val) {
-    if(!val) return;
+window.goToDate = function (val) {
+    if (!val) return;
     window.appData.currentDateStr = val;
     loadAllData();
     window.closeSearchResults();
 };
 
-window.closeSearchResults = function() {
-    document.getElementById('search-results-overlay').style.display = 'none';
+window.closeSearchResults = function () {
+    const overlay = document.getElementById('search-results-overlay');
+    overlay.classList.remove('show');
+    setTimeout(() => overlay.style.display = 'none', 300);
 };
 
-window.goToToday = function() {
+window.goToToday = function () {
     window.appData.currentDateStr = window.getLocalTodayStr();
     loadAllData();
 };
 
 // Weekly Tasks
-window.addWeeklyTaskUI = function() {
+window.addWeeklyTaskUI = function () {
     const input = document.getElementById('new-weekly-input');
     const val = input.value.trim();
     if (!val) return;
@@ -441,24 +459,24 @@ window.addWeeklyTaskUI = function() {
     saveData();
 };
 
-window.toggleWeeklyCheck = function(id) {
+window.toggleWeeklyCheck = function (id) {
     const t = window.appData.weekData.weeklyTasks.find(t => t.id === id);
-    if(t) t.completed = !t.completed;
+    if (t) t.completed = !t.completed;
     saveData();
     window.renderWeekly();
 };
 
-window.updateWeeklyText = function(id, txt) {
+window.updateWeeklyText = function (id, txt) {
     const t = window.appData.weekData.weeklyTasks.find(t => t.id === id);
-    if(t && t.content !== txt) { t.content = txt; saveData(); }
+    if (t && t.content !== txt) { t.content = txt; saveData(); }
 };
 
-window.updateWeeklyDate = function(id, date) {
+window.updateWeeklyDate = function (id, date) {
     const t = window.appData.weekData.weeklyTasks.find(t => t.id === id);
-    if(t) { t.deadline = date; saveData(); window.renderWeekly(); }
+    if (t) { t.deadline = date; saveData(); window.renderWeekly(); }
 };
 
-window.deleteWeeklyTask = function(id) {
+window.deleteWeeklyTask = function (id) {
     window.animateAndDelete(`weekly-task-${id}`, () => {
         const idx = window.appData.weekData.weeklyTasks.findIndex(t => t.id === id);
         if (idx > -1) {
@@ -471,11 +489,11 @@ window.deleteWeeklyTask = function(id) {
 };
 
 // Daily Tasks
-window.addDailyTaskUI = function(quadrant) {
+window.addDailyTaskUI = function (quadrant) {
     const input = document.getElementById(`input-q${quadrant}`);
     const val = input.value.trim();
-    if(!val) return;
-    
+    if (!val) return;
+
     const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
     tasks.push({
         id: window.uuid(),
@@ -490,7 +508,7 @@ window.addDailyTaskUI = function(quadrant) {
     saveData();
 };
 
-window.deleteDailyTask = function(id) {
+window.deleteDailyTask = function (id) {
     window.animateAndDelete(`task-${id}`, () => {
         const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
         const idx = tasks.findIndex(t => t.id === id);
@@ -503,31 +521,31 @@ window.deleteDailyTask = function(id) {
     });
 };
 
-window.updateDailyText = function(id, txt) {
+window.updateDailyText = function (id, txt) {
     const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
     const task = tasks.find(t => t.id === id);
-    if(task && task.content !== txt) {
+    if (task && task.content !== txt) {
         task.content = txt;
         saveData();
     }
 };
 
-window.updateDailyProgressUI = function(id, el) {
+window.updateDailyProgressUI = function (id, el) {
     const val = el.value;
     el.style.backgroundSize = `${val}% 100%`;
     const pctSpan = document.getElementById(`pct-${id}`);
-    if(pctSpan) pctSpan.innerText = val + '%';
-    
+    if (pctSpan) pctSpan.innerText = val + '%';
+
     const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
     const task = tasks.find(t => t.id === id);
-    if(task) {
+    if (task) {
         const oldProgress = task.progress;
         task.progress = parseInt(val);
         if (task.progress >= 100 && oldProgress < 100) {
             // Trigger Confetti
             const rect = el.getBoundingClientRect();
-            window.triggerConfetti(rect.left + rect.width/2, rect.top);
-            
+            window.triggerConfetti(rect.left + rect.width / 2, rect.top);
+
             // Render update
             window.renderDaily();
         } else if (task.progress < 100 && oldProgress >= 100) {
@@ -536,10 +554,10 @@ window.updateDailyProgressUI = function(id, el) {
     }
 };
 
-window.resetTask = function(id) {
+window.resetTask = function (id) {
     const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
     const task = tasks.find(t => t.id === id);
-    if(task) {
+    if (task) {
         task.progress = 0;
         window.renderDaily();
         saveData();
@@ -547,7 +565,7 @@ window.resetTask = function(id) {
 };
 
 // Subtasks
-window.addSubtaskUI = function(taskId) {
+window.addSubtaskUI = function (taskId) {
     const input = document.getElementById(`subtask-input-${taskId}`);
     const val = input.value.trim();
     if (!val) return;
@@ -562,7 +580,7 @@ window.addSubtaskUI = function(taskId) {
     }
 };
 
-window.toggleSubtaskCompletion = function(taskId, subtaskId) {
+window.toggleSubtaskCompletion = function (taskId, subtaskId) {
     const task = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks.find(t => t.id === taskId);
     if (task) {
         const subtask = task.subtasks.find(st => st.id === subtaskId);
@@ -575,7 +593,7 @@ window.toggleSubtaskCompletion = function(taskId, subtaskId) {
     }
 };
 
-window.deleteSubtask = function(taskId, subtaskId) {
+window.deleteSubtask = function (taskId, subtaskId) {
     const task = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks.find(t => t.id === taskId);
     if (task) {
         task.subtasks = task.subtasks.filter(st => st.id !== subtaskId);
@@ -585,7 +603,7 @@ window.deleteSubtask = function(taskId, subtaskId) {
     }
 };
 
-window.updateSubtaskContent = function(taskId, subtaskId, content) {
+window.updateSubtaskContent = function (taskId, subtaskId, content) {
     const task = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks.find(t => t.id === taskId);
     if (task) {
         const subtask = task.subtasks.find(st => st.id === subtaskId);
@@ -604,7 +622,7 @@ function updateDailyProgressFromSubtasks(task) {
 }
 
 // Recurring & Long Term & Recommendations
-window.addRecurringTaskUI = function() {
+window.addRecurringTaskUI = function () {
     const input = document.getElementById('new-recurring-input');
     const val = input.value.trim();
     if (!val) return;
@@ -614,7 +632,7 @@ window.addRecurringTaskUI = function() {
     saveData();
 };
 
-window.deleteRecurringTask = function(id) {
+window.deleteRecurringTask = function (id) {
     window.animateAndDelete(`recurring-${id}`, () => {
         window.appData.recurringData.recurring = window.appData.recurringData.recurring.filter(t => t.id !== id);
         saveData();
@@ -623,21 +641,21 @@ window.deleteRecurringTask = function(id) {
     });
 };
 
-window.updateRecurringTitle = function(id, txt) {
+window.updateRecurringTitle = function (id, txt) {
     const tpl = window.appData.recurringData.recurring.find(t => t.id === id);
     if (tpl) { tpl.title = txt; saveData(); }
 };
 
-window.addLongTermGoalUI = function() {
+window.addLongTermGoalUI = function () {
     const input = document.getElementById('new-goal-input');
-    if(!input.value) return;
+    if (!input.value) return;
     window.appData.longTermData.goals.push({ title: input.value, subGoals: [] });
     input.value = '';
     window.renderLongTerm();
     saveData();
 };
 
-window.deleteLongTermGoal = function(i) {
+window.deleteLongTermGoal = function (i) {
     // Note: Long Term Goals are rendered by index, not stable ID. 
     // We'd need to modify renderLongTerm to give them IDs if we want smooth delete.
     // For now, let's keep it simple or use a querySelector by index?
@@ -650,12 +668,12 @@ window.deleteLongTermGoal = function(i) {
     if (window.UIModule?.showToast) window.UIModule.showToast('已删除长期目标', { type: 'info' });
 };
 
-window.addSubGoalUI = function(idx) {
-     const input = document.createElement('input');
+window.addSubGoalUI = function (idx) {
+    const input = document.createElement('input');
     input.placeholder = "输入子目标名称然后回车";
     input.style.cssText = "width:100%; padding:5px; margin-top:5px; border:1px solid #ccc; font-size:12px;";
     input.onkeydown = (e) => {
-        if(e.key === 'Enter' && input.value) {
+        if (e.key === 'Enter' && input.value) {
             window.appData.longTermData.goals[idx].subGoals.push({ title: input.value, progress: 0 });
             window.renderLongTerm();
             saveData();
@@ -665,14 +683,14 @@ window.addSubGoalUI = function(idx) {
     input.focus();
 };
 
-window.deleteSubGoal = function(gIdx, sIdx) {
+window.deleteSubGoal = function (gIdx, sIdx) {
     window.appData.longTermData.goals[gIdx].subGoals.splice(sIdx, 1);
     saveData();
     window.renderLongTerm();
     if (window.UIModule?.showToast) window.UIModule.showToast('已删除子目标', { type: 'info' });
 };
 
-window.updateSubGoal = function(gIdx, sIdx, el) {
+window.updateSubGoal = function (gIdx, sIdx, el) {
     const val = el.value;
     el.style.backgroundSize = `${val}% 100%`;
     el.previousElementSibling.innerText = `${val}%`;
@@ -680,7 +698,7 @@ window.updateSubGoal = function(gIdx, sIdx, el) {
     debouncedSave();
 };
 
-window.deleteRecommendation = function(id) {
+window.deleteRecommendation = function (id) {
     window.animateAndDelete(`rec-${id}`, () => {
         const recs = window.appData.weekData.dailyData[window.appData.currentDateStr].recommendations;
         const idx = recs.findIndex(t => t.id === id);
@@ -694,13 +712,13 @@ window.deleteRecommendation = function(id) {
 };
 
 // Summary
-window.handleSummaryInput = function() {
+window.handleSummaryInput = function () {
     const val = document.getElementById('daily-summary').value;
     window.appData.weekData.dailyData[window.appData.currentDateStr].summary = val;
     debouncedSave();
 };
 
-window.toggleSummaryEdit = function(showEdit) {
+window.toggleSummaryEdit = function (showEdit) {
     const view = document.getElementById('daily-summary-view');
     const edit = document.getElementById('daily-summary');
     if (showEdit) {
@@ -719,7 +737,7 @@ window.toggleSummaryEdit = function(showEdit) {
 };
 
 // Summary Dock Toggle
-window.toggleSummaryDock = function() {
+window.toggleSummaryDock = function () {
     const dock = document.getElementById('bottom-summary-dock');
     const toggleBtn = document.getElementById('dock-toggle-btn');
     if (dock) {
@@ -731,8 +749,16 @@ window.toggleSummaryDock = function() {
 };
 
 // Settings
-window.openSettings = function() { document.getElementById('settings-overlay').style.display = 'flex'; };
-window.closeSettings = function() { document.getElementById('settings-overlay').style.display = 'none'; };
+window.openSettings = function () {
+    const overlay = document.getElementById('settings-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('show'), 10);
+};
+window.closeSettings = function () {
+    const overlay = document.getElementById('settings-overlay');
+    overlay.classList.remove('show');
+    setTimeout(() => overlay.style.display = 'none', 300);
+};
 
 function loadSettings() {
     const aiBaseUrl = localStorage.getItem('aiBaseUrl') || 'http://10.204.65.181:3000/api';
@@ -746,7 +772,7 @@ function loadSettings() {
 }
 window.loadSettings = loadSettings;
 
-window.saveSettings = function() {
+window.saveSettings = function () {
     const aiBaseUrl = document.getElementById('ai-base-url').value;
     const aiKey = document.getElementById('ai-key').value;
     const aiModel = document.getElementById('ai-model').value;
@@ -759,16 +785,20 @@ window.saveSettings = function() {
 };
 
 // Analytics
-window.openAnalytics = function() {
-    document.getElementById('analytics-overlay').style.display = 'flex';
+window.openAnalytics = function () {
+    const overlay = document.getElementById('analytics-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('show'), 10);
     window.switchAnalyticsTab('daily');
 };
 
-window.closeAnalytics = function() {
-    document.getElementById('analytics-overlay').style.display = 'none';
+window.closeAnalytics = function () {
+    const overlay = document.getElementById('analytics-overlay');
+    overlay.classList.remove('show');
+    setTimeout(() => overlay.style.display = 'none', 300);
 };
 
-window.switchAnalyticsTab = function(tab) {
+window.switchAnalyticsTab = function (tab) {
     document.querySelectorAll('#analytics-modal .tab-btn').forEach(el => el.classList.remove('active'));
     document.querySelector(`#analytics-modal .tab-btn[onclick="switchAnalyticsTab('${tab}')"]`).classList.add('active');
 
@@ -786,7 +816,7 @@ window.switchAnalyticsTab = function(tab) {
 };
 
 // Focus Mode
-window.enterFocusMode = function(qid) {
+window.enterFocusMode = function (qid) {
     const isAlreadyFocused = document.body.classList.contains('focus-mode') && document.getElementById(qid).classList.contains('focused');
     if (isAlreadyFocused) {
         window.exitFocusMode();
@@ -797,35 +827,37 @@ window.enterFocusMode = function(qid) {
     }
 };
 
-window.exitFocusMode = function() {
+window.exitFocusMode = function () {
     document.body.classList.remove('focus-mode');
     document.querySelectorAll('.quadrant').forEach(q => q.classList.remove('focused'));
 };
 
 // Search
-window.toggleExportDialog = function() {
+window.toggleExportDialog = function () {
     const overlay = document.getElementById('dialog-overlay');
-    if (overlay.style.display === 'flex') {
-        overlay.style.display = 'none';
+    if (overlay.classList.contains('show')) {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.style.display = 'none', 300);
     } else {
         overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('show'), 10);
         // Basic Export Content
         document.getElementById('dialog-content').innerHTML = `
             <h3>导出数据</h3>
             <p>点击下载当前周数据。</p>
             <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn-small" onclick="document.getElementById('dialog-overlay').style.display='none'">关闭</button>
+                <button class="btn-small" onclick="window.toggleExportDialog()">关闭</button>
                 <button class="btn-small" onclick="executeExport()">下载 JSON</button>
             </div>
         `;
     }
 };
 
-window.executeExport = function() {
-    const exportData = { 
-        weekData: window.appData.weekData, 
-        longTerm: window.appData.longTermData, 
-        recurring: window.appData.recurringData 
+window.executeExport = function () {
+    const exportData = {
+        weekData: window.appData.weekData,
+        longTerm: window.appData.longTermData,
+        recurring: window.appData.recurringData
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -836,7 +868,7 @@ window.executeExport = function() {
     window.toggleExportDialog();
 };
 
-window.searchAllFiles = async function(keyword) {
+window.searchAllFiles = async function (keyword) {
     const inputEl = document.getElementById('search-input');
     const errorEl = document.getElementById('search-error');
     const raw = (keyword ?? inputEl?.value ?? '').toString();
@@ -989,14 +1021,14 @@ async function callChatCompletionsRaw({ baseUrl, key, model }, messages) {
     };
 }
 
-window.generateAutoSummary = async function() {
+window.generateAutoSummary = async function () {
     const summaryTextarea = document.getElementById('daily-summary');
     if (!summaryTextarea) return;
-    
+
     const aiBaseUrl = localStorage.getItem('aiBaseUrl');
     const aiKey = localStorage.getItem('aiKey');
     const aiModel = localStorage.getItem('aiModel');
-    
+
     if (!aiBaseUrl) {
         window.showAlert("请先在“设置”中配置 AI 基础地址。", '提示');
         return;
@@ -1012,7 +1044,7 @@ window.generateAutoSummary = async function() {
     const completedTasks = tasks.filter(t => t.progress >= 100);
     const unfinishedTasks = tasks.filter(t => t.progress < 100);
     const totalTime = tasks.reduce((acc, t) => acc + (t.timer?.totalWork || 0) + (t.timer?.totalPomodoro || 0), 0);
-    
+
     const currentContext = `
         Date: ${window.appData.currentDateStr}
         Completed Tasks: ${completedTasks.map(t => t.content).join(', ')}
@@ -1050,7 +1082,7 @@ window.generateAutoSummary = async function() {
         const data = await response.json();
         const summaryRaw = data.choices[0].message.content;
         const summary = (summaryRaw || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        
+
         window.appData.weekData.dailyData[window.appData.currentDateStr].summary = summary;
         window.UIModule.renderAll(window.appData); // re-render to update summary view
         saveData();
@@ -1063,7 +1095,7 @@ window.generateAutoSummary = async function() {
     }
 };
 
-window.finalizeDayAndWeek = async function() {
+window.finalizeDayAndWeek = async function () {
     // Check for completed but unscheduled tasks first
     if (typeof window.ScheduleModule?.checkCompletedButUnscheduled === 'function') {
         const check = window.ScheduleModule.checkCompletedButUnscheduled();
@@ -1097,13 +1129,13 @@ window.finalizeDayAndWeek = async function() {
     const nextDate = new Date(todayDate);
     nextDate.setDate(nextDate.getDate() + 1);
     const nextDateStr = nextDate.toISOString().split('T')[0];
-    
+
     const todayDay = window.appData.weekData.dailyData[todayStr];
     if (!todayDay) return;
 
     // 1. 收集未完成的每日任务
     const unfinishedDaily = (todayDay.tasks || []).filter(t => t.progress < 100);
-    
+
     // 2. 收集未完成的周任务 (仅限周日)
     let unfinishedWeekly = [];
     if (todayDate.getDay() === 0) { // 0 is Sunday
@@ -1138,10 +1170,10 @@ window.finalizeDayAndWeek = async function() {
                 // 跨周：读取下周文件
                 targetData = await window.readJson(nextWeekFile);
                 if (!targetData) {
-                    targetData = { 
-                        weekId: window.getWeekId(nextDateStr), 
-                        weeklyTasks: [], 
-                        dailyData: {} 
+                    targetData = {
+                        weekId: window.getWeekId(nextDateStr),
+                        weeklyTasks: [],
+                        dailyData: {}
                     };
                 }
             } else {
@@ -1209,7 +1241,7 @@ window.finalizeDayAndWeek = async function() {
     }, "确认迁移");
 };
 
-window.breakdownTaskWithAI = async function(taskId) {
+window.breakdownTaskWithAI = async function (taskId) {
     const task = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks.find(t => t.id === taskId);
     if (!task) return;
 
@@ -1220,7 +1252,7 @@ window.breakdownTaskWithAI = async function(taskId) {
     }
 
     const btn = document.getElementById(`btn-magic-${taskId}`);
-    if(btn) btn.innerText = "⏳";
+    if (btn) btn.innerText = "⏳";
 
     try {
         const system = [
@@ -1250,7 +1282,7 @@ window.breakdownTaskWithAI = async function(taskId) {
         console.error(e);
         window.showAlert("AI 拆分失败：" + (e?.message || '未知错误'), '错误');
     } finally {
-        if(btn) btn.innerText = "✨";
+        if (btn) btn.innerText = "✨";
     }
 };
 
@@ -1274,13 +1306,13 @@ function createDragPreview(e, text) {
     const preview = ensureDragPreviewElement();
     const displayText = text && text.length > 40 ? text.substring(0, 40) + '...' : (text || '任务');
     preview.textContent = displayText;
-    
+
     // 获取计算后的 CSS 变量值
     const computedStyle = getComputedStyle(document.body);
     const cardBg = computedStyle.getPropertyValue('--card-bg').trim() || '#ffffff';
     const accent = computedStyle.getPropertyValue('--accent').trim() || '#0071e3';
     const textMain = computedStyle.getPropertyValue('--text-main').trim() || '#1d1d1f';
-    
+
     // 设置样式 - 使用 !important 确保生效
     preview.setAttribute('style', `
         position: absolute !important;
@@ -1304,7 +1336,7 @@ function createDragPreview(e, text) {
         visibility: visible !important;
         opacity: 1 !important;
     `);
-    
+
     // 确保元素在 DOM 中
     if (!document.body.contains(preview)) {
         document.body.appendChild(preview);
@@ -1320,7 +1352,7 @@ function createDragPreview(e, text) {
     }
 }
 
-window.dragStartWeekly = function(e, task) {
+window.dragStartWeekly = function (e, task) {
     window.dragSrcType = 'weekly';
     window.dragPayload = task;
     e.dataTransfer.effectAllowed = 'copy';
@@ -1328,7 +1360,7 @@ window.dragStartWeekly = function(e, task) {
     e.target.closest('.task-list-item')?.classList.add('dragging');
 };
 
-window.dragStartDaily = function(e, task) {
+window.dragStartDaily = function (e, task) {
     window.dragSrcType = 'daily';
     window.dragPayload = task;
     e.dataTransfer.effectAllowed = 'move';
@@ -1336,7 +1368,7 @@ window.dragStartDaily = function(e, task) {
     e.target.closest('.day-task-item')?.classList.add('dragging');
 };
 
-window.dragStartRecommendation = function(e, task) {
+window.dragStartRecommendation = function (e, task) {
     window.dragSrcType = 'recommendation';
     window.dragPayload = task;
     e.dataTransfer.effectAllowed = 'move';
@@ -1344,7 +1376,7 @@ window.dragStartRecommendation = function(e, task) {
     e.target.closest('.task-list-item')?.classList.add('dragging');
 };
 
-window.dragStartRecurring = function(e, tpl) {
+window.dragStartRecurring = function (e, tpl) {
     window.dragSrcType = 'recurring';
     window.dragPayload = tpl;
     e.dataTransfer.effectAllowed = 'copy';
@@ -1352,12 +1384,12 @@ window.dragStartRecurring = function(e, tpl) {
     e.target.closest('.task-list-item')?.classList.add('dragging');
 };
 
-window.dragStartSubtask = function(e, taskId, subtaskId) {
+window.dragStartSubtask = function (e, taskId, subtaskId) {
     e.stopPropagation();
     window.dragSrcType = 'subtask';
     window.dragPayload = { taskId, subtaskId };
     e.dataTransfer.effectAllowed = 'move';
-    
+
     // 尝试查找子任务内容
     let content = 'Subtask';
     const findSubtask = (tasks) => {
@@ -1369,21 +1401,21 @@ window.dragStartSubtask = function(e, taskId, subtaskId) {
         }
         return null;
     };
-    
+
     if (window.appData.weekData) {
-        content = findSubtask(window.appData.weekData.weeklyTasks) || 
-                  findSubtask(window.appData.weekData.dailyData[window.appData.currentDateStr]?.tasks || []) || 
-                  'Subtask';
+        content = findSubtask(window.appData.weekData.weeklyTasks) ||
+            findSubtask(window.appData.weekData.dailyData[window.appData.currentDateStr]?.tasks || []) ||
+            'Subtask';
     }
-    
+
     createDragPreview(e, content);
     e.target.closest('.subtask-item')?.classList.add('dragging');
 };
 
-window.allowDrop = function(e) {
+window.allowDrop = function (e) {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const container = e.target.closest('.q-tasks');
     if (!container) {
         const otherContainer = e.target.closest('#weekly-list, #recommendation-list, #recurring-list');
@@ -1428,17 +1460,17 @@ const dropStrategies = {
         timer: { totalWork: 0, isRunning: false, lastStart: null },
         subtasks: []
     }),
-    
+
     daily: (payload, targetQ) => {
         const sourceList = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
         const sourceIdx = sourceList.findIndex(t => t.id === payload.id);
         if (sourceIdx > -1) {
             const [task] = sourceList.splice(sourceIdx, 1);
-            window.pushUndo('MOVE_TASK', { 
-                taskId: task.id, 
-                fromDate: window.appData.currentDateStr, 
-                fromQuadrant: task.quadrant, 
-                toQuadrant: targetQ 
+            window.pushUndo('MOVE_TASK', {
+                taskId: task.id,
+                fromDate: window.appData.currentDateStr,
+                fromQuadrant: task.quadrant,
+                toQuadrant: targetQ
             }, "Task Moved. Undo?");
             task.quadrant = targetQ;
             return task;
@@ -1488,7 +1520,7 @@ const dropStrategies = {
     }
 };
 
-window.drop = function(e, targetQ) {
+window.drop = function (e, targetQ) {
     e.preventDefault();
     document.querySelectorAll('.drag-over').forEach(q => q.classList.remove('drag-over'));
     document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
@@ -1496,7 +1528,7 @@ window.drop = function(e, targetQ) {
 
     const handler = dropStrategies[window.dragSrcType];
     const newTask = handler ? handler(window.dragPayload, targetQ) : null;
-    
+
     if (newTask) {
         const tasks = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks;
         let insertIndex = tasks.length;
@@ -1506,7 +1538,7 @@ window.drop = function(e, targetQ) {
         }
         tasks.splice(insertIndex, 0, newTask);
     }
-    
+
     window.dragSrcType = null;
     window.dragPayload = null;
     window.dropBeforeId = null;
@@ -1515,12 +1547,12 @@ window.drop = function(e, targetQ) {
     saveData();
 };
 
-window.editTaskContent = function(id) {
+window.editTaskContent = function (id) {
     const container = document.getElementById(`task-${id}`).querySelector('.task-content-wrapper');
     if (!container) return;
     const view = container.querySelector('.markdown-content');
     const edit = container.querySelector('.edit-content');
-    
+
     view.style.display = 'none';
     edit.style.display = 'block';
     // Get raw content from data
@@ -1529,7 +1561,7 @@ window.editTaskContent = function(id) {
     edit.focus();
 };
 
-window.saveTaskContent = function(id, el) {
+window.saveTaskContent = function (id, el) {
     const val = el.innerText;
     const task = window.appData.weekData.dailyData[window.appData.currentDateStr].tasks.find(t => t.id === id);
     if (task) {
@@ -1539,14 +1571,14 @@ window.saveTaskContent = function(id, el) {
     }
 };
 
-window.dropItem = function(e, targetId, targetType) {
+window.dropItem = function (e, targetId, targetType) {
     e.preventDefault();
     e.stopPropagation();
     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     window.dragSrcType = null;
 };
 
-window.dropSubtask = function(e, targetTaskId, targetSubtaskId) {
+window.dropSubtask = function (e, targetTaskId, targetSubtaskId) {
     e.preventDefault();
     e.stopPropagation();
     window.dragSrcType = null;
@@ -1557,7 +1589,7 @@ window.dropSubtask = function(e, targetTaskId, targetSubtaskId) {
 function setupResizer() {
     const resizer = document.getElementById('resizer');
     const sidebar = document.getElementById('sidebar');
-    
+
     if (!resizer || !sidebar) return;
 
     resizer.addEventListener('mousedown', (e) => {
@@ -1565,20 +1597,20 @@ function setupResizer() {
         document.body.style.cursor = 'col-resize';
         const startX = e.clientX;
         const startWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
-        
+
         const doDrag = (e) => {
             const newWidth = startWidth + e.clientX - startX;
             if (newWidth > 200 && newWidth < 600) {
                 sidebar.style.width = newWidth + 'px';
             }
         };
-        
+
         const stopDrag = () => {
             document.body.style.cursor = 'default';
             document.removeEventListener('mousemove', doDrag);
             document.removeEventListener('mouseup', stopDrag);
         };
-        
+
         document.addEventListener('mousemove', doDrag);
         document.addEventListener('mouseup', stopDrag);
     });
@@ -1586,7 +1618,7 @@ function setupResizer() {
     // Right resizer for schedule sidebar
     const resizerRight = document.getElementById('resizer-right');
     const scheduleSidebar = document.getElementById('schedule-sidebar');
-    
+
     if (resizerRight && scheduleSidebar) {
         resizerRight.addEventListener('mousedown', (e) => {
             e.preventDefault();
@@ -1594,21 +1626,21 @@ function setupResizer() {
             resizerRight.classList.add('resizing');
             const startX = e.clientX;
             const startWidth = parseInt(window.getComputedStyle(scheduleSidebar).width, 10);
-            
+
             const doDrag = (e) => {
                 const newWidth = startWidth - (e.clientX - startX);
                 if (newWidth > 280 && newWidth < 450) {
                     scheduleSidebar.style.width = newWidth + 'px';
                 }
             };
-            
+
             const stopDrag = () => {
                 document.body.style.cursor = 'default';
                 resizerRight.classList.remove('resizing');
                 document.removeEventListener('mousemove', doDrag);
                 document.removeEventListener('mouseup', stopDrag);
             };
-            
+
             document.addEventListener('mousemove', doDrag);
             document.addEventListener('mouseup', stopDrag);
         });
@@ -1617,19 +1649,25 @@ function setupResizer() {
 
 // --- Smart Capture Logic ---
 
-window.openSmartAddModal = function() {
-    document.getElementById('smart-add-modal-overlay').style.display = 'flex';
-    document.getElementById('smart-add-input').focus();
+window.openSmartAddModal = function () {
+    const overlay = document.getElementById('smart-add-modal-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+        overlay.classList.add('show');
+        document.getElementById('smart-add-input').focus();
+    }, 10);
     document.getElementById('smart-add-preview').innerText = '';
     setInlineError(document.getElementById('smart-add-input'), document.getElementById('smart-add-error'), '');
 };
 
-window.closeSmartAddModal = function() {
-    document.getElementById('smart-add-modal-overlay').style.display = 'none';
+window.closeSmartAddModal = function () {
+    const overlay = document.getElementById('smart-add-modal-overlay');
+    overlay.classList.remove('show');
+    setTimeout(() => overlay.style.display = 'none', 300);
     setInlineError(document.getElementById('smart-add-input'), document.getElementById('smart-add-error'), '');
 };
 
-window.executeSmartAdd = async function() {
+window.executeSmartAdd = async function () {
     const inputEl = document.getElementById('smart-add-input');
     const errorEl = document.getElementById('smart-add-error');
     const input = (inputEl?.value || '').trim();
@@ -1666,7 +1704,7 @@ window.executeSmartAdd = async function() {
         if (!window.inboxData) window.inboxData = { items: [] };
         if (!Array.isArray(window.inboxData.items)) window.inboxData.items = [];
     }
-    
+
     // Prompt: 指导 AI 进行结构化提取
     const systemPrompt = `你是一个任务解析助手。当前日期：${today}。
 严格按规则抽取结构化信息，并且【只输出 JSON】（不要解释，不要思考过程，不要 <think>）。
@@ -1785,13 +1823,13 @@ window.executeSmartAdd = async function() {
         }
 
         saveData(); // 保存主数据
-        
+
         // UI Feedback
         if (previewEl) previewEl.innerText = `✅ ${message}：${result.content}`;
         document.getElementById('smart-add-input').value = '';
         setTimeout(() => {
-             window.closeSmartAddModal();
-             if (previewEl) previewEl.innerText = '';
+            window.closeSmartAddModal();
+            if (previewEl) previewEl.innerText = '';
         }, 1500);
 
     } catch (e) {
@@ -1813,17 +1851,17 @@ window.executeSmartAdd = async function() {
 
 async function fetchRecentSummaries(daysToLookBack = 7) {
     if (!window.dirHandle) return "";
-    
+
     let context = "Recent History (Last 7 Days):\n";
     const today = new Date(window.appData.currentDateStr);
-    
+
     // 回溯过去 N 天
     for (let i = 1; i <= daysToLookBack; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
         const dateStr = d.toISOString().split('T')[0];
-        const fileName = window.getWeekFileName(dateStr); 
-        
+        const fileName = window.getWeekFileName(dateStr);
+
         try {
             let data;
             // 优化: 如果文件名和当前加载的一样，直接用内存数据
@@ -1838,7 +1876,7 @@ async function fetchRecentSummaries(daysToLookBack = 7) {
                 const summary = data.dailyData[dateStr].summary;
                 if (summary) {
                     // 截取前200字符节省Token
-                    context += `- ${dateStr}: ${summary.substring(0, 200)}...\n`; 
+                    context += `- ${dateStr}: ${summary.substring(0, 200)}...\n`;
                 }
             }
         } catch (e) {
