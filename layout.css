@@ -15,6 +15,27 @@ aside#sidebar {
     z-index: 100;
 }
 
+#weekly-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 12px;
+}
+
+/* Custom scrollbar for a cleaner look in the sidebar */
+#weekly-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+#weekly-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+#weekly-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-light);
+}
+
 #schedule-sidebar {
     width: 280px;
     background: var(--glass-bg);
