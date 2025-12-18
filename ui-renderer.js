@@ -161,15 +161,15 @@ window.UIModule.renderAll = function (appData) {
 window.UIModule.renderLongTerm = function (goals) {
     const list = document.getElementById('long-term-list');
     list.innerHTML = '';
-    goals.forEach((goal, i) => {
+    goals.forEach((goal, goalIndex) => {
         const div = document.createElement('div');
         div.className = 'task-list-item';
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                 <div style="font-weight:600;">${goal.title}</div>
-                <button class="btn-delete" onclick="deleteLongTermGoal(${i})" title="删除目标">×</button>
+                <button class="btn-delete" onclick="deleteLongTermGoal(${goalIndex})" title="Delete Goal">×</button>
             </div>
-            ${goal.subGoals.map((sub, j) => `
+            ${goal.subGoals.map((sub, subGoalIndex) => `
                 <div style="display:flex; align-items:center; font-size:12px; margin-top:4px;">
                     <span style="flex:1; min-width:0; margin-right:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${sub.title}</span>
                     <div class="slider-container" style="width:40%; max-width:120px; flex:none;"
@@ -180,14 +180,14 @@ window.UIModule.renderLongTerm = function (goals) {
                         <input type="range" min="0" max="100" value="${sub.progress}"
                             style="background-size: ${sub.progress}% 100%"
                             draggable="false"
-                            oninput="updateSubGoal(${i}, ${j}, this)"
+                            oninput="updateSubGoal(${goalIndex}, ${subGoalIndex}, this)"
                             onchange="debouncedSave()">
                     </div>
-                    <button class="btn-delete" onclick="deleteSubGoal(${i}, ${j})" title="删除子目标">×</button>
+                    <button class="btn-delete" onclick="deleteSubGoal(${goalIndex}, ${subGoalIndex})" title="Delete Sub-goal">×</button>
                 </div>
             `).join('')}
             <div style="margin-top:5px; text-align:right;">
-                <button class="btn-small btn-secondary" onclick="addSubGoalUI(${i})">+ 子目标</button>
+                <button class="btn-small btn-secondary" onclick="addSubGoalUI(${goalIndex})">+ Sub-goal</button>
             </div>
         `;
         list.appendChild(div);

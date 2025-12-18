@@ -2025,21 +2025,8 @@ pre code:hover {
     transform: translateX(-50%) translateY(0);
 }
 
+
 /* --- 12. Enhanced Interactive States --- */
-
-/* 选中状态 */
-.task-list-item.selected,
-.day-task-item.selected {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
-}
-
-/* (drag-placeholder removed) */
-
-/* 快捷键提示 */
-
-
-/* --- RECOVERED SCHEDULE MODULE STYLES --- */
 
 /* Sidebar Presets */
 

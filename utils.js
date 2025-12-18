@@ -15,13 +15,13 @@ window.debounce = function (func, wait) {
 window.formatTime = function (ms) {
     if (ms === 0) return '00:00';
     const totalSeconds = Math.floor(ms / 1000);
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
 
     const pad = (n) => n.toString().padStart(2, '0');
-    if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
-    return `${pad(m)}:${pad(s)}`;
+    if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+    return `${pad(minutes)}:${pad(seconds)}`;
 };
 
 window.formatTimeForAnalytics = function (ms) {
@@ -115,9 +115,9 @@ window.triggerConfetti = function (x, y) {
 };
 
 window.animateAndDelete = function (elementId, deleteCallback) {
-    const el = document.getElementById(elementId);
-    if (el) {
-        el.classList.add('deleting');
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.classList.add('deleting');
         // Wait for CSS transition (0.3s)
         setTimeout(() => {
             deleteCallback();

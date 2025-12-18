@@ -613,9 +613,9 @@ window.deleteRecurringTask = function (id) {
     });
 };
 
-window.updateRecurringTitle = function (id, txt) {
-    const tpl = window.appData.recurringData.recurring.find(t => t.id === id);
-    if (tpl) { tpl.title = txt; window.debouncedSave(); }
+window.updateRecurringTitle = function (id, text) {
+    const template = window.appData.recurringData.recurring.find(t => t.id === id);
+    if (template) { template.title = text; window.debouncedSave(); }
 };
 
 window.addLongTermGoalUI = function () {
@@ -627,58 +627,54 @@ window.addLongTermGoalUI = function () {
     window.debouncedSave();
 };
 
-window.deleteLongTermGoal = function (i) {
+window.deleteLongTermGoal = function (index) {
     // Note: Long Term Goals are rendered by index, not stable ID. 
     // We'd need to modify renderLongTerm to give them IDs if we want smooth delete.
-    // For now, let's keep it simple or use a querySelector by index?
-    // Let's assume the renderLongTerm assigns IDs? It doesn't yet.
-    // We will skip animation for Long Term Goals for this step or update renderLongTerm next.
-    // For consistency, let's just do the deletion.
-    window.appData.longTermData.goals.splice(i, 1);
+    window.appData.longTermData.goals.splice(index, 1);
     window.debouncedSave();
     window.renderLongTerm();
-    if (window.UIModule?.showToast) window.UIModule.showToast('已删除长期目标', { type: 'info' });
+    if (window.UIModule?.showToast) window.UIModule.showToast('Project deleted', { type: 'info' });
 };
 
-window.addSubGoalUI = function (idx) {
+window.addSubGoalUI = function (goalIndex) {
     const input = document.createElement('input');
-    input.placeholder = "输入子目标名称然后回车";
+    input.placeholder = "Enter sub-goal and press Enter";
     input.style.cssText = "width:100%; padding:5px; margin-top:5px; border:1px solid #ccc; font-size:12px;";
     input.onkeydown = (e) => {
         if (e.key === 'Enter' && input.value) {
-            window.appData.longTermData.goals[idx].subGoals.push({ title: input.value, progress: 0 });
+            window.appData.longTermData.goals[goalIndex].subGoals.push({ title: input.value, progress: 0 });
             window.renderLongTerm();
             window.debouncedSave();
         }
     };
-    document.getElementById('long-term-list').children[idx].appendChild(input);
+    document.getElementById('long-term-list').children[goalIndex].appendChild(input);
     input.focus();
 };
 
-window.deleteSubGoal = function (gIdx, sIdx) {
-    window.appData.longTermData.goals[gIdx].subGoals.splice(sIdx, 1);
+window.deleteSubGoal = function (goalIndex, subGoalIndex) {
+    window.appData.longTermData.goals[goalIndex].subGoals.splice(subGoalIndex, 1);
     window.debouncedSave();
     window.renderLongTerm();
-    if (window.UIModule?.showToast) window.UIModule.showToast('已删除子目标', { type: 'info' });
+    if (window.UIModule?.showToast) window.UIModule.showToast('Sub-goal deleted', { type: 'info' });
 };
 
-window.updateSubGoal = function (gIdx, sIdx, el) {
-    const val = el.value;
-    el.style.backgroundSize = `${val}% 100%`;
-    el.previousElementSibling.innerText = `${val}%`;
-    window.appData.longTermData.goals[gIdx].subGoals[sIdx].progress = parseInt(val);
+window.updateSubGoal = function (goalIndex, subGoalIndex, element) {
+    const val = element.value;
+    element.style.backgroundSize = `${val}% 100%`;
+    element.previousElementSibling.innerText = `${val}%`;
+    window.appData.longTermData.goals[goalIndex].subGoals[subGoalIndex].progress = parseInt(val);
     debouncedSave();
 };
 
 window.deleteRecommendation = function (id) {
     window.animateAndDelete(`rec-${id}`, () => {
-        const recs = window.appData.weekData.dailyData[window.appData.currentDateStr].recommendations;
-        const idx = recs.findIndex(t => t.id === id);
-        if (idx > -1) {
-            recs.splice(idx, 1);
+        const recommendations = window.appData.weekData.dailyData[window.appData.currentDateStr].recommendations;
+        const index = recommendations.findIndex(t => t.id === id);
+        if (index > -1) {
+            recommendations.splice(index, 1);
             window.debouncedSave();
             window.renderRecommendations();
-            if (window.UIModule?.showToast) window.UIModule.showToast('已删除推荐任务', { type: 'info' });
+            if (window.UIModule?.showToast) window.UIModule.showToast('Recommendation removed', { type: 'info' });
         }
     });
 };

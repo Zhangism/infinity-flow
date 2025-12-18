@@ -223,14 +223,14 @@ window.ScheduleModule = window.ScheduleModule || {};
         container.querySelectorAll('.time-block-segment').forEach(segment => {
             segment.addEventListener('mousedown', (e) => {
                 const groupId = segment.dataset.groupId;
-                const segIndex = parseInt(segment.dataset.segmentIndex);
-                this.handleSegmentMouseDown(e, groupId, segIndex);
+                const segmentIndex = parseInt(segment.dataset.segmentIndex);
+                this.handleSegmentMouseDown(e, groupId, segmentIndex);
             });
 
             segment.addEventListener('dblclick', (e) => {
                 const groupId = segment.dataset.groupId;
-                const segIndex = parseInt(segment.dataset.segmentIndex);
-                this.splitSegment(groupId, segIndex, e);
+                const segmentIndex = parseInt(segment.dataset.segmentIndex);
+                this.splitSegment(groupId, segmentIndex, e);
             });
         });
     };
@@ -636,10 +636,6 @@ window.ScheduleModule = window.ScheduleModule || {};
         }
     };
 
-    // Removed Resize Logic
-    window.ScheduleModule.startResize = null;
-    window.ScheduleModule.handleBlockResize = null;
-    window.ScheduleModule.handleBlockResizeEnd = null;
 
     // ============ Merge Operation ============
 
