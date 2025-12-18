@@ -1032,7 +1032,9 @@ input[type="range"].progress-complete::-webkit-slider-thumb {
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(8px);
-    transition: all 0.3s var(--ease-out);
+    transition: opacity 0.3s var(--ease-out), visibility 0.3s;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .modal {
@@ -1046,18 +1048,19 @@ input[type="range"].progress-complete::-webkit-slider-thumb {
     gap: 20px;
     border: 1px solid var(--border);
     transform: scale(0.95) translateY(20px);
-    opacity: 0;
     transition: all 0.4s var(--ease-out);
 }
 
 .modal-overlay.show {
     display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .modal-overlay.show .modal {
     transform: scale(1) translateY(0);
-    opacity: 1;
 }
+
 
 .modal h3 {
     margin: 0;
@@ -1413,74 +1416,6 @@ input[type="range"].progress-complete::-webkit-slider-thumb {
     border-color: var(--accent);
 }
 
-
-#analytics-modal {
-    width: 80%;
-    max-width: 900px;
-    height: 80vh;
-}
-
-#analytics-content {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.chart-container {
-    margin-top: 20px;
-}
-
-.chart-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.bar-chart {
-    display: flex;
-    justify-content: space-around;
-    align-items: flex-end;
-    height: 200px;
-    border-left: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 0;
-}
-
-.bar {
-    width: 50px;
-    background-color: var(--accent);
-    text-align: center;
-    color: white;
-    font-size: 12px;
-    line-height: 20px;
-}
-
-.bar-label {
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-light);
-    margin-top: 5px;
-}
-
-.metrics-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-}
-
-.metric {
-    text-align: center;
-}
-
-.metric-value {
-    font-size: 24px;
-    font-weight: 600;
-}
-
-.metric-label {
-    font-size: 12px;
-    color: var(--text-light);
-}
 
 #analytics-modal {
     width: 80%;
@@ -2278,133 +2213,6 @@ pre code:hover {
         transform: rotate(360deg);
     }
 }
-
-/* --- Calendar Module --- */
-
-#calendar-modal {
-    width: 600px;
-    max-width: 90%;
-    /* Subtle zoom/fade animation */
-    animation: zoomIn 0.2s ease-out;
-}
-
-@keyframes zoomIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.calendar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.calendar-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 10px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-light);
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-}
-
-.calendar-day {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    position: relative;
-    background-color: var(--bg-color);
-    /* Level 0 / Default */
-    border: 1px solid var(--border);
-    transition: transform 0.1s, border-color 0.1s;
-}
-
-.calendar-day:hover {
-    transform: scale(1.1);
-    z-index: 10;
-    border-color: var(--accent);
-}
-
-.padding-day {
-    opacity: 0.3;
-    pointer-events: none;
-    border: none;
-    background: transparent;
-}
-
-/* Heatmap Levels (GitHub-style Green) */
-.calendar-day.level-0 {
-    background-color: var(--bg-color);
-    color: var(--text-light);
-}
-
-.calendar-day.level-1 {
-    background-color: rgba(46, 204, 113, 0.2);
-    color: var(--text-main);
-    border-color: transparent;
-}
-
-.calendar-day.level-2 {
-    background-color: rgba(46, 204, 113, 0.4);
-    color: var(--text-main);
-    border-color: transparent;
-}
-
-.calendar-day.level-3 {
-    background-color: rgba(var(--color-success-rgb), 0.62);
-    color: #fff;
-    border-color: transparent;
-}
-
-.calendar-day.level-4 {
-    background-color: rgba(var(--color-success-rgb), 0.92);
-    color: #fff;
-    border-color: transparent;
-}
-
-/* Today Highlight */
-.calendar-day.is-today {
-    border: 2px solid var(--accent);
-    font-weight: bold;
-}
-
-/* Overdue Marker */
-.calendar-day.has-overdue::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 6px;
-    height: 6px;
-    background-color: var(--color-danger);
-    border-radius: 50%;
-}
-
 
 /* --- Drag & Drop Indicator --- */
 .drop-indicator {

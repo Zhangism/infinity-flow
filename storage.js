@@ -12,14 +12,14 @@ window.StorageModule.dirHandle = null;
 window.StorageModule.savedDirHandle = null;
 
 // Helpers
-window.StorageModule.openDB = async function() {
+window.StorageModule.openDB = async function () {
     return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onupgradeneeded = e => {
             const db = e.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
             if (db.objectStoreNames.contains('folderHandles')) {
-                try { db.deleteObjectStore('folderHandles'); } catch(e) {}
+                try { db.deleteObjectStore('folderHandles'); } catch (e) { }
             }
         };
         req.onsuccess = e => resolve(e.target.result);
@@ -27,7 +27,7 @@ window.StorageModule.openDB = async function() {
     });
 };
 
-window.StorageModule.verifyPermission = async function(handle) {
+window.StorageModule.verifyPermission = async function (handle) {
     try {
         if ((await handle.queryPermission({ mode: 'readwrite' })) === 'granted') return true;
         if ((await handle.requestPermission({ mode: 'readwrite' })) === 'granted') return true;
@@ -35,7 +35,7 @@ window.StorageModule.verifyPermission = async function(handle) {
     return false;
 };
 
-window.StorageModule.getSavedWorkspaceHandle = async function() {
+window.StorageModule.getSavedWorkspaceHandle = async function () {
     try {
         const db = await window.StorageModule.openDB();
         const tx = db.transaction(STORE_NAME, 'readonly');
@@ -51,7 +51,7 @@ window.StorageModule.getSavedWorkspaceHandle = async function() {
     }
 };
 
-window.StorageModule.selectWorkspace = async function() {
+window.StorageModule.selectWorkspace = async function () {
     try {
         window.StorageModule.dirHandle = await window.showDirectoryPicker();
         window.StorageModule.savedDirHandle = null;
@@ -74,7 +74,7 @@ window.StorageModule.selectWorkspace = async function() {
     }
 };
 
-window.StorageModule.tryAutoLoadWorkspace = async function() {
+window.StorageModule.tryAutoLoadWorkspace = async function () {
     try {
         const savedHandle = await window.StorageModule.getSavedWorkspaceHandle();
         if (!savedHandle) {
@@ -105,7 +105,7 @@ window.StorageModule.tryAutoLoadWorkspace = async function() {
     }
 };
 
-window.StorageModule.requestSavedWorkspacePermission = async function() {
+window.StorageModule.requestSavedWorkspacePermission = async function () {
     const handle = window.StorageModule.savedDirHandle || await window.StorageModule.getSavedWorkspaceHandle();
     if (!handle) return null;
 
@@ -117,7 +117,7 @@ window.StorageModule.requestSavedWorkspacePermission = async function() {
     return handle;
 };
 
-window.StorageModule.readJson = async function(filename) {
+window.StorageModule.readJson = async function (filename) {
     if (!window.StorageModule.dirHandle) return null;
     try {
         const handle = await window.StorageModule.dirHandle.getFileHandle(filename);
@@ -127,13 +127,13 @@ window.StorageModule.readJson = async function(filename) {
     } catch (e) { return null; }
 };
 
-window.StorageModule.writeJson = async function(filename, data) {
+window.StorageModule.writeJson = async function (filename, data) {
     if (!window.StorageModule.dirHandle) throw new Error("No workspace selected");
     try {
         const tempFilename = `${filename}.tmp`;
         const tempHandle = await window.StorageModule.dirHandle.getFileHandle(tempFilename, { create: true });
         const writable = await tempHandle.createWritable();
-        await writable.write(JSON.stringify(data, null, 2));
+        await writable.write(JSON.stringify(data));
         await writable.close();
         await tempHandle.move(window.StorageModule.dirHandle, filename);
     } catch (e) {
@@ -142,7 +142,7 @@ window.StorageModule.writeJson = async function(filename, data) {
     }
 };
 
-window.StorageModule.saveDataToDisk = async function(filesToSave) {
+window.StorageModule.saveDataToDisk = async function (filesToSave) {
     if (!window.StorageModule.dirHandle) return;
 
     // Init caches
@@ -166,12 +166,12 @@ window.StorageModule.saveDataToDisk = async function(filesToSave) {
 
             if (shouldBackup) {
                 const backupDirHandle = await window.StorageModule.dirHandle.getDirectoryHandle('backups', { create: true });
-                
+
                 try {
                     const sourceHandle = await window.StorageModule.dirHandle.getFileHandle(file.name);
                     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                     const backupFileName = `${file.name}-${timestamp}`;
-                    
+
                     const backupFileHandle = await backupDirHandle.getFileHandle(backupFileName, { create: true });
                     const writable = await backupFileHandle.createWritable();
                     const readable = await sourceHandle.getFile();

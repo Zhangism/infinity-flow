@@ -1,29 +1,73 @@
 // --- Timer & Pomodoro Logic ---
 
 function openTimerModal(taskId) {
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === taskId);
-    if (!task) return;
+    console.log('[Timer] Opening modal for task:', taskId);
+    // window.alert('Timer triggered for: ' + taskId); // Uncommented for direct user feedback if needed
+    const dateStr = window.appData.currentDateStr;
+    const dailyData = window.appData.weekData?.dailyData?.[dateStr];
+
+    if (!dailyData || !dailyData.tasks) {
+        console.error('[Timer] Daily data or tasks missing for date:', dateStr);
+        return;
+    }
+
+    const task = dailyData.tasks.find(t => t.id === taskId);
+    if (!task) {
+        console.error('[Timer] Task not found in current daily tasks:', taskId, 'Available IDs:', dailyData.tasks.map(t => t.id));
+        return;
+    }
+
+    // Initialize timer if missing (defensive)
+    if (!task.timer) {
+        task.timer = { totalWork: 0, isRunning: false, lastStart: null };
+    }
 
     // Store current task id
-    appData.currentTimerTaskId = taskId;
+    window.appData.currentTimerTaskId = taskId;
 
-    document.getElementById('timer-task-title').innerText = task.content;
-    document.getElementById('manual-time-input').value = Math.round(task.timer.totalWork / 60000);
+    const titleEl = document.getElementById('timer-task-title');
+    const manualInput = document.getElementById('manual-time-input');
+    const overlay = document.getElementById('timer-modal-overlay');
 
-    document.getElementById('timer-modal-overlay').style.display = 'flex';
+    if (titleEl) titleEl.innerText = task.content || '未命名任务';
+    if (manualInput) manualInput.value = Math.round((task.timer.totalWork || 0) / 60000);
+
+    if (overlay) {
+        console.log('[Timer] Showing overlay');
+        overlay.style.display = 'flex';
+        // Use timeout to trigger CSS transition
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 10);
+    } else {
+        console.error('[Timer] #timer-modal-overlay not found in DOM!');
+    }
 
     // Ensure display/buttons reflect current running state
-    updateTimerUI();
+    if (typeof window.updateTimerUI === 'function') {
+        window.updateTimerUI();
+    }
 }
 
 function closeTimerModal() {
-    const tasks = appData.weekData?.dailyData?.[appData.currentDateStr]?.tasks;
-    const task = tasks?.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const tasks = window.appData.weekData?.dailyData?.[dateStr]?.tasks;
+    const task = tasks?.find(t => t.id === window.appData.currentTimerTaskId);
     const isRunning = !!(task && (task.timer?.isRunning || (task.timer?.pomodoro && task.timer.pomodoro.isRunning)));
 
+    const hide = () => {
+        const overlay = document.getElementById('timer-modal-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                window.appData.currentTimerTaskId = null;
+            }, 300);
+        }
+    };
+
     if (!isRunning) {
-        document.getElementById('timer-modal-overlay').style.display = 'none';
-        appData.currentTimerTaskId = null;
+        hide();
         return;
     }
 
@@ -36,8 +80,7 @@ function closeTimerModal() {
 
     if (!overlay || !titleEl || !msgEl || !yesBtn || !cancelBtn) {
         // Fallback: close without stopping
-        document.getElementById('timer-modal-overlay').style.display = 'none';
-        appData.currentTimerTaskId = null;
+        hide();
         return;
     }
 
@@ -45,53 +88,54 @@ function closeTimerModal() {
     msgEl.innerText = '关闭计时面板后，计时可以继续在后台运行。请选择：';
     cancelBtn.style.display = 'inline-block';
     yesBtn.style.display = 'inline-block';
-    const restoreCancel = () => {
-        cancelBtn.innerText = '取消';
-        cancelBtn.onclick = () => {
-            if (typeof window.closeConfirmModal === 'function') window.closeConfirmModal();
-            else overlay.style.display = 'none';
-        };
-    };
 
+    // Save original handlers if needed, but here we just overwrite
     cancelBtn.innerText = '继续后台计时';
     yesBtn.innerText = '停止并关闭';
 
     cancelBtn.onclick = () => {
-        overlay.style.display = 'none';
-        restoreCancel();
-        document.getElementById('timer-modal-overlay').style.display = 'none';
-        appData.currentTimerTaskId = null;
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.style.display = 'none', 300);
+        hide();
     };
 
     yesBtn.onclick = () => {
-        // Stop timers but keep accumulated time
-        if (task?.timer?.pomodoro?.isRunning) pausePomodoro();
-        if (task?.timer?.isRunning) toggleStopwatch(task.id);
-        overlay.style.display = 'none';
-        restoreCancel();
-        document.getElementById('timer-modal-overlay').style.display = 'none';
-        appData.currentTimerTaskId = null;
+        // Stop timers
+        if (task?.timer?.pomodoro?.isRunning) window.pausePomodoro();
+        if (task?.timer?.isRunning) window.toggleStopwatch(task.id);
+
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.style.display = 'none', 300);
+        hide();
     };
 
     overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('show'), 10);
 }
 
 function switchTimerTab(tab) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(`${tab}-tab`).classList.add('active');
-    document.querySelector(`.tab-btn[onclick="switchTimerTab('${tab}')"]`).classList.add('active');
+
+    const content = document.getElementById(`${tab}-tab`);
+    if (content) content.classList.add('active');
+
+    const btn = document.querySelector(`.tab-btn[onclick*="${tab}"]`);
+    if (btn) btn.classList.add('active');
 }
 
 function setupTimerStyle() {
     const savedStyle = localStorage.getItem('timerStyle') || 'dashboard';
     const modal = document.getElementById('timer-modal');
-    modal.classList.remove('style-dashboard', 'style-minimal');
-    modal.classList.add(`style-${savedStyle}`);
+    if (modal) {
+        modal.classList.remove('style-dashboard', 'style-minimal');
+        modal.classList.add(`style-${savedStyle}`);
+    }
 }
 
 function toggleTimerStyle() {
     const modal = document.getElementById('timer-modal');
+    if (!modal) return;
     let currentStyle = modal.classList.contains('style-minimal') ? 'minimal' : 'dashboard';
     let newStyle = currentStyle === 'dashboard' ? 'minimal' : 'dashboard';
 
@@ -101,22 +145,24 @@ function toggleTimerStyle() {
 }
 
 function togglePomodoro() {
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const task = window.appData.weekData?.dailyData?.[dateStr]?.tasks.find(t => t.id === window.appData.currentTimerTaskId);
     if (!task) return;
 
     if (task.timer.pomodoro && task.timer.pomodoro.isRunning) {
-        pausePomodoro();
+        window.pausePomodoro();
     } else {
-        startPomodoro();
+        window.startPomodoro();
     }
 }
 
 function startPomodoro() {
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const task = window.appData.weekData?.dailyData?.[dateStr]?.tasks.find(t => t.id === window.appData.currentTimerTaskId);
     if (!task) return;
 
     if (task.timer.isRunning) {
-        toggleStopwatch(task.id); // Pause stopwatch
+        window.toggleStopwatch(task.id); // Pause stopwatch
     }
 
     if (!task.timer.pomodoro) {
@@ -133,12 +179,12 @@ function startPomodoro() {
 
     pomodoro.isRunning = true;
     pomodoro.lastStart = Date.now();
-    // UI refresh is handled by the global timer loop in script.js
-    updateTimerUI();
+    window.updateTimerUI();
 }
 
 function pausePomodoro() {
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const task = window.appData.weekData?.dailyData?.[dateStr]?.tasks.find(t => t.id === window.appData.currentTimerTaskId);
     if (!task || !task.timer.pomodoro || !task.timer.pomodoro.isRunning) return;
 
     const pomodoro = task.timer.pomodoro;
@@ -147,46 +193,52 @@ function pausePomodoro() {
     pomodoro.remaining -= elapsed;
     task.timer.totalPomodoro = (task.timer.totalPomodoro || 0) + elapsed;
     pomodoro.lastStart = null;
-    saveData();
+    if (window.debouncedSave) window.debouncedSave();
 }
 
 function resetPomodoro() {
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const task = window.appData.weekData?.dailyData?.[dateStr]?.tasks.find(t => t.id === window.appData.currentTimerTaskId);
     if (!task || !task.timer.pomodoro) return;
 
     const pomodoro = task.timer.pomodoro;
     pomodoro.isRunning = false;
     pomodoro.remaining = pomodoro.duration;
     pomodoro.lastStart = null;
-    updateTimerUI();
+    window.updateTimerUI();
 }
 
 function resetStopwatch() {
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const task = window.appData.weekData?.dailyData?.[dateStr]?.tasks.find(t => t.id === window.appData.currentTimerTaskId);
     if (task) {
         task.timer.totalWork = 0;
         task.timer.isRunning = false;
         task.timer.lastStart = null;
-        saveData();
+        if (window.debouncedSave) window.debouncedSave();
     }
 }
 
 function updateManualTime() {
-    const newTime = document.getElementById('manual-time-input').value;
+    const manualInput = document.getElementById('manual-time-input');
+    if (!manualInput) return;
+    const newTime = manualInput.value;
     if (newTime === '' || isNaN(newTime)) return;
 
-    const task = appData.weekData.dailyData[appData.currentDateStr].tasks.find(t => t.id === appData.currentTimerTaskId);
+    const dateStr = window.appData.currentDateStr;
+    const task = window.appData.weekData?.dailyData?.[dateStr]?.tasks.find(t => t.id === window.appData.currentTimerTaskId);
     if (task) {
         task.timer.totalWork = newTime * 60000;
         task.timer.totalPomodoro = 0; // Reset Pomodoro so total = manual input
-        saveData();
-        closeTimerModal();
+        if (window.debouncedSave) window.debouncedSave();
+        window.closeTimerModal();
     }
 }
 
 function toggleStopwatch(id) {
-    id = id || appData.currentTimerTaskId;
-    const tasks = appData.weekData.dailyData[appData.currentDateStr].tasks;
+    id = id || window.appData.currentTimerTaskId;
+    const dateStr = window.appData.currentDateStr;
+    const tasks = window.appData.weekData?.dailyData?.[dateStr]?.tasks || [];
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
@@ -200,15 +252,14 @@ function toggleStopwatch(id) {
         task.timer.totalWork += (now - task.timer.lastStart);
         task.timer.isRunning = false;
         task.timer.lastStart = null;
-        updateTimerUI();
     } else {
         // Start (and pause others)
         if (task.timer.pomodoro && task.timer.pomodoro.isRunning) {
-            pausePomodoro(); // Pause pomodoro if running on this task
+            window.pausePomodoro(); // Pause pomodoro if running on this task
         }
 
         tasks.forEach(t => {
-            if (t.timer.isRunning) {
+            if (t.timer && t.timer.isRunning) {
                 t.timer.totalWork += (now - t.timer.lastStart);
                 t.timer.isRunning = false;
                 t.timer.lastStart = null;
@@ -216,13 +267,13 @@ function toggleStopwatch(id) {
         });
         task.timer.isRunning = true;
         task.timer.lastStart = now;
-        // UI refresh is handled by the global timer loop in script.js
-        updateTimerUI();
     }
-    saveData();
+    window.updateTimerUI();
+    if (window.debouncedSave) window.debouncedSave();
 }
 
 function calculateTotalTime(task) {
+    if (!task.timer) return 0;
     let total = (task.timer.totalWork || 0) + (task.timer.totalPomodoro || 0);
     if (task.timer.isRunning && task.timer.lastStart) {
         total += (Date.now() - task.timer.lastStart);
@@ -234,14 +285,15 @@ function calculateTotalTime(task) {
 }
 
 function updateTimerUI() {
-    const tasks = appData.weekData?.dailyData?.[appData.currentDateStr]?.tasks;
+    const dateStr = window.appData.currentDateStr;
+    const tasks = window.appData.weekData?.dailyData?.[dateStr]?.tasks;
     if (!tasks) return;
 
     tasks.forEach(task => {
         const totalTime = calculateTotalTime(task);
-        // formatTime is global from script.js
-        const timeStr = formatTime(totalTime);
-        const isTimerActive = task.timer.isRunning || (task.timer.pomodoro && task.timer.pomodoro.isRunning);
+        if (typeof window.formatTime !== 'function') return;
+        const timeStr = window.formatTime(totalTime);
+        const isTimerActive = !!(task.timer.isRunning || (task.timer.pomodoro && task.timer.pomodoro.isRunning));
 
         const card = document.getElementById(`task-${task.id}`);
         if (card) {
@@ -249,82 +301,64 @@ function updateTimerUI() {
             const badgeSpan = card.querySelector('.timer-badge span');
             if (badge && badgeSpan) {
                 badgeSpan.innerText = `⏱ ${timeStr}`;
-                if (isTimerActive) {
-                    badge.classList.add('active');
-                } else {
-                    badge.classList.remove('active');
-                }
+                badge.classList.toggle('active', isTimerActive);
             }
         }
     });
 
     // Update Timer displays if modal is open
-    if (appData.currentTimerTaskId) {
-        const task = tasks.find(t => t.id === appData.currentTimerTaskId);
+    if (window.appData.currentTimerTaskId) {
+        const task = tasks.find(t => t.id === window.appData.currentTimerTaskId);
         if (task) {
-            // Stopwatch Display
             const stopwatchDisplay = document.getElementById('stopwatch-display');
             if (stopwatchDisplay) {
                 const totalStopwatchTime = (task.timer.totalWork || 0) + (task.timer.isRunning ? (Date.now() - task.timer.lastStart) : 0);
-                stopwatchDisplay.innerText = formatTime(totalStopwatchTime);
+                stopwatchDisplay.innerText = window.formatTime(totalStopwatchTime);
             }
 
-            // Pomodoro Display
             const pomodoroDisplay = document.getElementById('pomodoro-display');
             if (pomodoroDisplay) {
                 if (task.timer.pomodoro && task.timer.pomodoro.isRunning) {
                     const pomodoro = task.timer.pomodoro;
                     const elapsed = Date.now() - pomodoro.lastStart;
-                    const remaining = pomodoro.remaining - elapsed;
+                    const remaining = Math.max(0, pomodoro.remaining - elapsed);
 
                     if (remaining <= 0) {
                         pomodoro.isRunning = false;
-                        // Calculate actual elapsed time for this session
                         const actualElapsed = Date.now() - pomodoro.lastStart;
                         task.timer.totalPomodoro = (task.timer.totalPomodoro || 0) + actualElapsed;
                         pomodoro.remaining = pomodoro.duration;
                         pomodoro.lastStart = null;
-                        saveData();
+                        if (window.debouncedSave) window.debouncedSave();
                         const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-1.mp3');
                         audio.play().catch(() => { });
                         if (typeof window.showAlert === 'function') {
                             window.showAlert('番茄钟结束！', '提醒');
                         }
-                        pomodoroDisplay.innerText = formatTime(pomodoro.duration);
+                        pomodoroDisplay.innerText = window.formatTime(pomodoro.duration);
                     } else {
-                        pomodoroDisplay.innerText = formatTime(remaining);
+                        pomodoroDisplay.innerText = window.formatTime(remaining);
                     }
                 } else if (task.timer.pomodoro) {
-                    pomodoroDisplay.innerText = formatTime(task.timer.pomodoro.remaining);
+                    pomodoroDisplay.innerText = window.formatTime(task.timer.pomodoro.remaining);
                 } else {
-                    pomodoroDisplay.innerText = formatTime(25 * 60 * 1000);
+                    pomodoroDisplay.innerText = window.formatTime(25 * 60 * 1000);
                 }
             }
 
-            // Update Pomodoro Toggle Button Text
             const pomodoroToggleButton = document.getElementById('pomodoro-toggle-btn');
             if (pomodoroToggleButton) {
-                if (task.timer.pomodoro && task.timer.pomodoro.isRunning) {
-                    pomodoroToggleButton.innerText = '暂停';
-                } else {
-                    pomodoroToggleButton.innerText = '开始';
-                }
+                pomodoroToggleButton.innerText = (task.timer.pomodoro && task.timer.pomodoro.isRunning) ? '暂停' : '开始';
             }
 
-            // Disable reset / manual adjust while running
             const pomodoroResetButton = document.getElementById('pomodoro-reset-btn');
             if (pomodoroResetButton) {
                 pomodoroResetButton.disabled = !!(task.timer.pomodoro && task.timer.pomodoro.isRunning);
             }
 
-            // Update Stopwatch Toggle Button Text
             const stopwatchToggleButton = document.getElementById('stopwatch-toggle-btn');
             if (stopwatchToggleButton) {
-                if (task.timer.isRunning) {
-                    stopwatchToggleButton.innerText = '暂停';
-                } else {
-                    stopwatchToggleButton.innerText = '开始';
-                }
+                stopwatchToggleButton.innerText = task.timer.isRunning ? '暂停' : '开始';
             }
 
             const stopwatchResetButton = document.getElementById('stopwatch-reset-btn');
@@ -341,7 +375,7 @@ function updateTimerUI() {
     }
 }
 
-// Expose functions to window for HTML onclick handlers
+// Expose functions to window
 window.openTimerModal = openTimerModal;
 window.closeTimerModal = closeTimerModal;
 window.switchTimerTab = switchTimerTab;

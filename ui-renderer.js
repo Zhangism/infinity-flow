@@ -123,7 +123,7 @@ window.UIModule.generateTaskHTML = function (task, isDone) {
         </div>
         
         <div class="controls-row">
-            <div class="${timerClass}" onclick="openTimerModal('${task.id}')">
+            <div class="${timerClass}" onclick="window.openTimerModal('${task.id}')">
                 <span>⏱ ${timeStr}</span>
             </div>
 
@@ -505,7 +505,7 @@ window.UIModule.updateSaveIndicator = function (status) {
 
     // Toggle overlay
     if (status === 'saving') {
-        overlay.style.display = 'flex';
+        overlay.style.display = 'none';
     } else {
         overlay.style.display = 'none';
     }

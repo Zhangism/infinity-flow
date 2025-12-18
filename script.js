@@ -490,24 +490,24 @@ window.addWeeklyTaskUI = function () {
     window.appData.weekData.weeklyTasks.push({ id: window.uuid(), content: val, deadline: '', completed: false });
     input.value = '';
     window.renderWeekly();
-    saveData();
+    window.debouncedSave();
 };
 
 window.toggleWeeklyCheck = function (id) {
     const t = window.appData.weekData.weeklyTasks.find(t => t.id === id);
     if (t) t.completed = !t.completed;
-    saveData();
+    window.debouncedSave();
     window.renderWeekly();
 };
 
 window.updateWeeklyText = function (id, txt) {
     const t = window.appData.weekData.weeklyTasks.find(t => t.id === id);
-    if (t && t.content !== txt) { t.content = txt; saveData(); }
+    if (t && t.content !== txt) { t.content = txt; window.debouncedSave(); }
 };
 
 window.updateWeeklyDate = function (id, date) {
     const t = window.appData.weekData.weeklyTasks.find(t => t.id === id);
-    if (t) { t.deadline = date; saveData(); window.renderWeekly(); }
+    if (t) { t.deadline = date; window.debouncedSave(); window.renderWeekly(); }
 };
 
 window.deleteWeeklyTask = function (id) {
@@ -515,7 +515,7 @@ window.deleteWeeklyTask = function (id) {
         const idx = window.appData.weekData.weeklyTasks.findIndex(t => t.id === id);
         if (idx > -1) {
             window.appData.weekData.weeklyTasks.splice(idx, 1);
-            saveData();
+            window.debouncedSave();
             window.renderWeekly();
             if (window.UIModule?.showToast) window.UIModule.showToast('已删除周任务', { type: 'info' });
         }
@@ -539,7 +539,7 @@ window.addDailyTaskUI = function (quadrant) {
     });
     input.value = '';
     window.renderDaily();
-    saveData();
+    window.debouncedSave();
 };
 
 window.deleteDailyTask = function (id) {
@@ -549,7 +549,7 @@ window.deleteDailyTask = function (id) {
         if (idx > -1) {
             const [task] = tasks.splice(idx, 1);
             window.pushUndo('DELETE_TASK', { task: task, date: window.appData.currentDateStr }, "任务已删除，撤销？");
-            saveData();
+            window.debouncedSave();
             window.renderDaily();
         }
     });
@@ -560,7 +560,7 @@ window.updateDailyText = function (id, txt) {
     const task = tasks.find(t => t.id === id);
     if (task && task.content !== txt) {
         task.content = txt;
-        saveData();
+        window.debouncedSave();
     }
 };
 
@@ -594,7 +594,7 @@ window.resetTask = function (id) {
     if (task) {
         task.progress = 0;
         window.renderDaily();
-        saveData();
+        window.debouncedSave();
     }
 };
 
@@ -610,7 +610,7 @@ window.addSubtaskUI = function (taskId) {
         input.value = '';
         updateDailyProgressFromSubtasks(task);
         window.renderDaily();
-        saveData();
+        window.debouncedSave();
     }
 };
 
@@ -622,7 +622,7 @@ window.toggleSubtaskCompletion = function (taskId, subtaskId) {
             subtask.completed = !subtask.completed;
             updateDailyProgressFromSubtasks(task);
             window.renderDaily();
-            saveData();
+            window.debouncedSave();
         }
     }
 };
@@ -633,7 +633,7 @@ window.deleteSubtask = function (taskId, subtaskId) {
         task.subtasks = task.subtasks.filter(st => st.id !== subtaskId);
         updateDailyProgressFromSubtasks(task);
         window.renderDaily();
-        saveData();
+        window.debouncedSave();
     }
 };
 
@@ -643,7 +643,7 @@ window.updateSubtaskContent = function (taskId, subtaskId, content) {
         const subtask = task.subtasks.find(st => st.id === subtaskId);
         if (subtask) {
             subtask.content = content;
-            saveData();
+            window.debouncedSave();
         }
     }
 };
@@ -663,13 +663,13 @@ window.addRecurringTaskUI = function () {
     window.appData.recurringData.recurring.push({ id: window.uuid(), title: val });
     input.value = '';
     window.renderRecurring();
-    saveData();
+    window.debouncedSave();
 };
 
 window.deleteRecurringTask = function (id) {
     window.animateAndDelete(`recurring-${id}`, () => {
         window.appData.recurringData.recurring = window.appData.recurringData.recurring.filter(t => t.id !== id);
-        saveData();
+        window.debouncedSave();
         window.renderRecurring();
         if (window.UIModule?.showToast) window.UIModule.showToast('已删除日常模板', { type: 'info' });
     });
@@ -677,7 +677,7 @@ window.deleteRecurringTask = function (id) {
 
 window.updateRecurringTitle = function (id, txt) {
     const tpl = window.appData.recurringData.recurring.find(t => t.id === id);
-    if (tpl) { tpl.title = txt; saveData(); }
+    if (tpl) { tpl.title = txt; window.debouncedSave(); }
 };
 
 window.addLongTermGoalUI = function () {
@@ -686,7 +686,7 @@ window.addLongTermGoalUI = function () {
     window.appData.longTermData.goals.push({ title: input.value, subGoals: [] });
     input.value = '';
     window.renderLongTerm();
-    saveData();
+    window.debouncedSave();
 };
 
 window.deleteLongTermGoal = function (i) {
@@ -697,7 +697,7 @@ window.deleteLongTermGoal = function (i) {
     // We will skip animation for Long Term Goals for this step or update renderLongTerm next.
     // For consistency, let's just do the deletion.
     window.appData.longTermData.goals.splice(i, 1);
-    saveData();
+    window.debouncedSave();
     window.renderLongTerm();
     if (window.UIModule?.showToast) window.UIModule.showToast('已删除长期目标', { type: 'info' });
 };
@@ -710,7 +710,7 @@ window.addSubGoalUI = function (idx) {
         if (e.key === 'Enter' && input.value) {
             window.appData.longTermData.goals[idx].subGoals.push({ title: input.value, progress: 0 });
             window.renderLongTerm();
-            saveData();
+            window.debouncedSave();
         }
     };
     document.getElementById('long-term-list').children[idx].appendChild(input);
@@ -719,7 +719,7 @@ window.addSubGoalUI = function (idx) {
 
 window.deleteSubGoal = function (gIdx, sIdx) {
     window.appData.longTermData.goals[gIdx].subGoals.splice(sIdx, 1);
-    saveData();
+    window.debouncedSave();
     window.renderLongTerm();
     if (window.UIModule?.showToast) window.UIModule.showToast('已删除子目标', { type: 'info' });
 };
@@ -738,7 +738,7 @@ window.deleteRecommendation = function (id) {
         const idx = recs.findIndex(t => t.id === id);
         if (idx > -1) {
             recs.splice(idx, 1);
-            saveData();
+            window.debouncedSave();
             window.renderRecommendations();
             if (window.UIModule?.showToast) window.UIModule.showToast('已删除推荐任务', { type: 'info' });
         }
