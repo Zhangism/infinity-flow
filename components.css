@@ -1,0 +1,88 @@
+/* components.css - Modularized UI Components for Infinity Flow */
+
+.btn-icon {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity var(--t-normal) var(--ease-out), transform var(--t-fast) var(--ease-out), color var(--t-normal) var(--ease-out);
+    border: none;
+    background: none;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.btn-icon:hover {
+    opacity: 1;
+    color: var(--text-accent);
+    transform: scale(1.1);
+}
+
+.btn-icon:active {
+    transform: scale(0.95);
+}
+
+.btn-small {
+    background: var(--text-main);
+    color: var(--bg-color);
+    border: none;
+    border-radius: var(--radius);
+    padding: 0 12px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: opacity var(--t-normal) var(--ease-out), transform var(--t-fast) var(--ease-out);
+}
+
+.btn-small:hover {
+    opacity: 0.9;
+}
+
+.btn-small:active {
+    transform: scale(0.95);
+}
+
+.inline-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    font-size: 13px;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inline-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+    outline: none;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+    outline: none;
+}
+
+.empty-state {
+    padding: 24px;
+    margin: 8px 0;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-card);
+    background: rgba(var(--accent-rgb), 0.02);
+    text-align: center;
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 500;
+}
