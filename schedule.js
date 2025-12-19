@@ -1,6 +1,10 @@
 // schedule.js - Time Blocking Module for Flow Whiteboard
 
-window.ScheduleModule = window.ScheduleModule || {};
+// Register with App namespace
+window.App = window.App || {};
+window.App.Schedule = window.App.Schedule || {};
+// Backward compatibility
+window.ScheduleModule = window.App.Schedule;
 (function () {
 
     // ============ Constants ============

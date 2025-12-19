@@ -1,6 +1,10 @@
 // storage.js - Standard Script Version
 
-window.StorageModule = {};
+// Register with App namespace
+window.App = window.App || {};
+window.App.Storage = {};
+// Backward compatibility
+window.StorageModule = window.App.Storage;
 
 // IndexedDB Configuration
 const DB_NAME = 'InfinityFlowDB';

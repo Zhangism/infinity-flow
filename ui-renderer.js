@@ -1,6 +1,10 @@
 // ui-renderer.js - Standard Script Version
 
-window.UIModule = {};
+// Register with App namespace
+window.App = window.App || {};
+window.App.UI = {};
+// Backward compatibility
+window.UIModule = window.App.UI;
 
 // Shared UI helpers
 window.UIModule.emptyHtml = function (message) {
