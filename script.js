@@ -1,22 +1,16 @@
 // script.js - Application Entry Point
 // Core initialization, data loading/saving, and render bridges
 
-// --- Initialize State ---
-// State is now managed in app-namespace.js via window.App.state
-// but we ensure backward compatibility here
+// Ensure state is initialized (legacy support and current namespace sync)
 if (!window.appData) {
-    window.appData = {
-        currentWeekFile: null,
-        weekId: null,
-        weekData: null,
-        longTermData: null,
-        recurringData: null,
-        currentDateStr: window.getLocalTodayStr(),
-        timerInterval: null,
-        currentTimerTaskId: null,
-        undoState: null,
-        undoTimeout: null
-    };
+    window.appData = {};
+}
+
+// Default current date to today if not set (fixing the 1970-01-01 bug)
+if (!window.appData.currentDateStr) {
+    window.appData.currentDateStr = typeof window.getLocalTodayStr === 'function'
+        ? window.getLocalTodayStr()
+        : new Date().toISOString().split('T')[0];
 }
 
 // --- Expose Globals for Legacy Scripts ---
@@ -151,8 +145,10 @@ window.showWorkspaceIntro = function (autoResult) {
 // --- Data Loading ---
 async function loadAllData() {
     try {
+        console.log('[DEBUG] loadAllData called with currentDateStr:', window.appData.currentDateStr);
         window.appData.weekId = window.getWeekId(window.appData.currentDateStr);
         window.appData.currentWeekFile = window.getWeekFileName(window.appData.currentDateStr);
+        console.log('[DEBUG] Computed weekId:', window.appData.weekId, 'weekFile:', window.appData.currentWeekFile);
 
         // Load Data
         window.appData.recurringData = await window.StorageModule.readJson('recurring_tasks.json') || { recurring: [] };
@@ -161,10 +157,17 @@ async function loadAllData() {
         window.appData.longTermData = await window.StorageModule.readJson('long_term_goals.json') || { goals: [] };
 
         let wData = await window.StorageModule.readJson(window.appData.currentWeekFile);
+        console.log('[DEBUG] Read week file result:', wData ? 'found' : 'null', 'weeklyTasks count:', wData?.weeklyTasks?.length ?? 'N/A');
         if (!wData) {
+            console.log('[DEBUG] Creating new week data structure');
             wData = { weekId: window.appData.weekId, weeklyTasks: [], dailyData: {} };
         }
+        if (!Array.isArray(wData.weeklyTasks)) {
+            console.warn('[DEBUG] weeklyTasks was not an array, fixing');
+            wData.weeklyTasks = [];
+        }
         if (!wData.weekId) wData.weekId = window.appData.weekId;
+        console.log('[DEBUG] Final weeklyTasks count before assign:', wData.weeklyTasks.length);
 
         // Ensure Day Data with schedule array
         if (!wData.dailyData[window.appData.currentDateStr]) {

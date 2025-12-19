@@ -20,6 +20,8 @@ aside#sidebar {
     overflow-y: auto;
     padding-right: 4px;
     margin-bottom: 12px;
+    flex-shrink: 0;
+    /* Prevent collapse when sidebar overflows */
 }
 
 /* Custom scrollbar for a cleaner look in the sidebar */

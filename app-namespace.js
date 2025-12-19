@@ -18,7 +18,7 @@ window.App = window.App || {
         weekData: null,
         longTermData: null,
         recurringData: null,
-        currentDateStr: null,
+        currentDateStr: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
         timerInterval: null,
         currentTimerTaskId: null,
         undoState: null,

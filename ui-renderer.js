@@ -200,36 +200,30 @@ window.UIModule.renderLongTerm = function (goals) {
 
 window.UIModule.renderWeekly = function (tasks, currentDateStr) {
     const list = document.getElementById('weekly-list');
+    if (!list) return;
 
-    // 1. Cleanup
-    Array.from(list.children).forEach(el => {
-        if (el.id && el.id.startsWith('weekly-task-')) {
-            const id = el.id.replace('weekly-task-', '');
-            const task = tasks.find(t => t.id === id);
-            if (!task) {
-                el.remove();
-            }
-        }
-    });
+    // Standardize tasks array
+    if (!Array.isArray(tasks)) tasks = [];
+
+    // Full re-render to ensure consistency (fixes potential ghost/missing items)
+    // Preservation of focus/state is not needed as this is usually called after actions, not during typing.
+    list.innerHTML = '';
 
     tasks.forEach(task => {
-        let div = document.getElementById(`weekly-task-${task.id}`);
+        const div = document.createElement('div');
+        div.id = `weekly-task-${task.id}`;
+        div.className = `task-list-item ${task.completed ? 'completed' : ''}`;
+        div.draggable = true;
+        div.ondragstart = (e) => window.dragStartWeekly(e, task);
+        div.ondragover = (e) => window.allowDrop(e);
+        div.ondragleave = (e) => e.currentTarget.classList.remove('drag-over');
+        div.ondrop = (e) => window.dropItem(e, task.id, 'weekly');
+
         const daysLeft = window.calculateDaysLeft(task.deadline, currentDateStr);
         const daysLeftHtml = daysLeft ? `<span class="ddl-tag ${daysLeft.urgent ? 'ddl-urgent' : 'ddl-normal'}">${daysLeft.label}</span>` : '';
         const deadlineHtml = task.deadline ? `<span class="ddl-tag ddl-normal">截止 ${task.deadline}</span>` : '';
 
-        if (!div) {
-            // Create
-            div = document.createElement('div');
-            div.id = `weekly-task-${task.id}`;
-            div.className = `task-list-item ${task.completed ? 'completed' : ''}`;
-            div.draggable = true;
-            div.ondragstart = (e) => window.dragStartWeekly(e, task);
-            div.ondragover = (e) => window.allowDrop(e);
-            div.ondragleave = (e) => e.currentTarget.classList.remove('drag-over');
-            div.ondrop = (e) => window.dropItem(e, task.id, 'weekly');
-
-            div.innerHTML = `
+        div.innerHTML = `
             <div class="row-main" style="align-items:flex-start; gap:8px;">
                 <label class="custom-checkbox">
                     <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleWeeklyCheck('${task.id}')">
@@ -250,41 +244,7 @@ window.UIModule.renderWeekly = function (tasks, currentDateStr) {
                     <button class="btn-delete" onclick="deleteWeeklyTask('${task.id}')" title="删除任务">×</button>
                 </div>
             </div>`;
-            list.appendChild(div);
-        } else {
-            // Update
-            div.className = `task-list-item ${task.completed ? 'completed' : ''}`;
-            const checkbox = div.querySelector('input[type="checkbox"]');
-            if (checkbox) checkbox.checked = task.completed;
-
-            // Update Title only if not editing
-            const titleDiv = div.querySelector('.task-title');
-            if (titleDiv && document.activeElement !== titleDiv) {
-                if (titleDiv.innerText !== task.content) titleDiv.innerText = task.content;
-            }
-
-            // Update Meta Row
-            const metaRow = div.querySelector('.task-meta-row');
-            if (metaRow) {
-                const newMetaHTML = `
-                        ${daysLeftHtml}
-                        ${deadlineHtml}
-                        <input type="date" value="${task.deadline || ''}" 
-                               class="ddl-input"
-                               onchange="updateWeeklyDate('${task.id}', this.value)">
-                        <span class="ddl-picker" onclick="this.previousElementSibling.showPicker()">📅 设置截止</span>
-                 `;
-                // Simple innerHTML compare might fail due to whitespace, but it's okay to overwrite here as inputs (date) are not main focus area
-                // Actually, if I am picking a date, the picker is open. Updating innerHTML might close it?
-                // But renderWeekly is called on updateWeeklyDate -> saveData -> ... no renderWeekly call in updateWeeklyDate!
-                // Wait, updateWeeklyDate calls renderWeekly!
-                // window.updateWeeklyDate = function(id, date) { ... window.renderWeekly(); }
-                // So picking a date triggers a re-render. If I wipe innerHTML, the picker might glitch or close?
-                // But typically date picker 'onchange' happens after selection.
-                // So it should be fine.
-                metaRow.innerHTML = newMetaHTML;
-            }
-        }
+        list.appendChild(div);
     });
 };
 
